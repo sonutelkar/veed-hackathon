@@ -61,6 +61,21 @@ export default function Navbar() {
                   My Memories
                 </span>
               </Link>
+              <Link
+                href="/generate"
+                className={`mr-6 py-2 font-medium text-[15px] ${
+                  pathname === '/generate'
+                    ? 'text-[#8A4FFF] active'
+                    : 'text-[#667085] hover:text-[#8A4FFF]'
+                }`}
+              >
+                <span className="flex items-center">
+                <svg className="w-5 h-5 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+  <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM4 16l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3zm16 0l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z" />
+</svg>
+                  Generate
+                </span>
+              </Link>
             </div>
           </div>
           <div className="flex items-center">

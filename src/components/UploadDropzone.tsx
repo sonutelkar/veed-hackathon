@@ -8,13 +8,13 @@ export default function UploadDropzone() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const router = useRouter();
-  
+
   // Use the centralized Supabase store
   const { supabase, user, session, loading: authLoading, error: authError } = useSupabase();
 
   async function handleSubmit() {
     if (!files.length || !user) return;
-    
+
     setUploading(true);
     setUploadError(null);
 
@@ -24,7 +24,7 @@ export default function UploadDropzone() {
       for (const file of files) {
         // Create path with user's UID as folder
         const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
-        
+
         // Use the authenticated client for storage operations
         const { error, data } = await supabase.storage
           .from('videos')
@@ -33,24 +33,23 @@ export default function UploadDropzone() {
             contentType: file.type,
             upsert: false,
           });
-        
+
         if (error) {
           console.error('Upload error:', error);
           setUploadError(`Upload failed: ${error.message}`);
           setUploading(false);
           return;
         }
-        
-        // Get the public URL for the uploaded file
-        const { data: publicURLData } = supabase.storage
-          .from('videos')
-          .getPublicUrl(path);
-          
+
+        // Optionally get the public URL for the uploaded file
+        // const { data: publicURLData } = supabase.storage
+        //   .from('videos')
+        //   .getPublicUrl(path);
         paths.push(path);
       }
 
       setUploading(false);
-      
+
       // Redirect to videos page after successful upload
       router.push('/videos');
     } catch (err: any) {
@@ -67,34 +66,110 @@ export default function UploadDropzone() {
     }
   }, [authError]);
 
+  // Handler for file selection
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFiles(Array.from(e.target.files || []));
+    setUploadError(null); // Clear errors when new files selected
+  }
+
   return (
-    <section className="w-full max-w-md border-dashed border-2 p-6 rounded-xl">
-      <input
-        type="file"
-        accept="image/*,video/*"
-        multiple
-        className="w-full"
-        onChange={e => {
-          setFiles(Array.from(e.target.files || []));
-          setUploadError(null); // Clear errors when new files selected
-        }}
-      />
+    <>
+      <div className="w-full">
+        {/* Custom dropzone area */}
+        <label
+          htmlFor="fileInput"
+          className="group relative flex flex-col items-center justify-center w-full h-48 border-4 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-indigo-500 transition-colors duration-200 bg-gray-50"
+        >
+          <input
+            id="fileInput"
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            onChange={handleFileChange}
+          />
+          <div className="flex flex-col items-center justify-center pointer-events-none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-12 h-12 text-gray-400 group-hover:text-indigo-500 transition-colors duration-200"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M7 16V4m0 12l-4-4m4 4l4-4M17 8v12m0-12l4 4m-4-4l-4 4"
+              />
+            </svg>
+            <span className="mt-2 text-gray-500 group-hover:text-indigo-600 transition-colors duration-200">
+              Click or drag files here to upload
+            </span>
+            {files.length > 0 && (
+              <span className="mt-2 text-sm text-gray-700">
+                {files.length} file{files.length > 1 ? 's' : ''} selected
+              </span>
+            )}
+          </div>
+        </label>
+
+        {/* List selected files (optional preview) */}
+        {files.length > 0 && (
+          <ul className="mt-4 space-y-2 max-h-40 overflow-y-auto">
+            {files.map((file) => (
+              <li key={file.name} className="text-sm text-gray-700 flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 mr-2 text-gray-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 2H4v10h12V5z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {file.name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <button
         onClick={handleSubmit}
         disabled={!files.length || uploading || !user || authLoading}
-        className="mt-4 w-full rounded bg-black py-2 text-white disabled:opacity-50"
+        className={`
+          mt-6 w-full py-3 rounded-2xl text-white text-lg font-semibold
+          bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700
+          focus:outline-none focus:ring-4 focus:ring-indigo-300 
+          transition-transform transform ${uploading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
+        `}
       >
         {uploading ? 'Processing…' : 'Generate Adventure'}
       </button>
-      
+
       {/* Authentication status messages */}
-      {!user && !authLoading && <p className="mt-2 text-sm text-red-500">Please login to upload files</p>}
-      {authLoading && <p className="mt-2 text-sm">Checking authentication status...</p>}
-      {authError && <p className="mt-2 text-sm text-red-500">Authentication error: {authError.message}</p>}
-      
+      {!user && !authLoading && (
+        <p className="mt-4 text-sm text-red-500 text-center">
+          Please log in to upload files
+        </p>
+      )}
+      {authLoading && (
+        <p className="mt-4 text-sm text-gray-600 text-center">Checking authentication status...</p>
+      )}
+      {authError && (
+        <p className="mt-4 text-sm text-red-500 text-center">
+          Authentication error: {authError.message}
+        </p>
+      )}
+
       {/* Upload error message */}
-      {uploadError && <p className="mt-2 text-sm text-red-500">{uploadError}</p>}
-    </section>
+      {uploadError && (
+        <p className="mt-4 text-sm text-red-500 text-center">{uploadError}</p>
+      )}
+      </>
   );
 }
-

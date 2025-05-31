@@ -15,6 +15,7 @@ interface VideoFile {
   url: string;
   createdAt: string;
   size: number;
+  type: string;
 }
 
 // Interface for Supabase storage file
@@ -64,11 +65,12 @@ export default function Videos() {
           return;
         }
         
-        // Filter for video files only
-        const videoFiles = data
-          .filter((file: StorageFile) => file.name.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv)$/i))
+        // Filter for video and image files only
+        const mediaFiles = data
+          .filter((file: StorageFile) => 
+            file.name.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv|jpg|jpeg|png|gif)$/i))
           .map((file: StorageFile) => {
-            // Get public URL for each video
+            // Get public URL for each media file
             const url = supabase.storage.from('videos').getPublicUrl(`${user.id}/${file.name}`).data.publicUrl;
             
             return {
@@ -76,11 +78,12 @@ export default function Videos() {
               name: formatDate(file.created_at),
               url: url,
               createdAt: file.created_at,
-              size: file.metadata?.size || 0
+              size: file.metadata?.size || 0,
+              type: file.name.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv)$/i) ? 'video' : 'image' // Determine type
             };
           });
         
-        setVideos(videoFiles);
+        setVideos(mediaFiles);
       } catch (err) {
         console.error('Unexpected error fetching videos:', err);
       } finally {
@@ -101,10 +104,18 @@ export default function Videos() {
     return null;
   }
 
-  const filterVideos = (filter: 'all' | 'recent' | 'popular') => {
+  const filterVideos = (filter: 'all' | 'newest' | 'oldest') => {
     setActiveFilter(filter);
-    // In a real app, this would filter videos from the database
-    // For now, we'll just use the fetched data
+    
+    let sortedVideos = [...videos];
+    
+    if (filter === 'newest') {
+      sortedVideos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (filter === 'oldest') {
+      sortedVideos.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }
+    
+    setVideos(sortedVideos);
   };
 
   const formatDate = (dateString: string) => {
@@ -134,8 +145,8 @@ export default function Videos() {
             </p>
           </div>
           <Link
-            href="/dashboard"
-            className="paw-button inline-flex items-center rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+            href="/generate"
+            className="paw-button inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
           >
             Create New Adventure
           </Link>
@@ -148,36 +159,25 @@ export default function Videos() {
               <div className="flex rounded-full overflow-hidden shadow-sm">
                 <button
                   type="button"
-                  onClick={() => filterVideos('all')}
-                  className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
-                    activeFilter === 'all'
+                  onClick={() => filterVideos('newest')}
+                  className={`relative -ml-px inline-flex items-center px-4 py-2 text-sm font-medium ${
+                    activeFilter === 'newest'
                       ? 'bg-pet-purple text-purple'
                       : 'bg-white text-pet-purple hover:bg-[#F5F0FF]'
                   } border border-[#E5DAFF]`}
                 >
-                  All Memories
+                  Newest First
                 </button>
                 <button
                   type="button"
-                  onClick={() => filterVideos('recent')}
+                  onClick={() => filterVideos('oldest')}
                   className={`relative -ml-px inline-flex items-center px-4 py-2 text-sm font-medium ${
-                    activeFilter === 'recent'
+                    activeFilter === 'oldest'
                       ? 'bg-pet-purple text-purple'
                       : 'bg-white text-pet-purple hover:bg-[#F5F0FF]'
                   } border border-[#E5DAFF]`}
                 >
-                  Recent
-                </button>
-                <button
-                  type="button"
-                  onClick={() => filterVideos('popular')}
-                  className={`relative -ml-px inline-flex items-center px-4 py-2 text-sm font-medium ${
-                    activeFilter === 'popular'
-                      ? 'bg-pet-purple text-purple'
-                      : 'bg-white text-pet-purple hover:bg-[#F5F0FF]'
-                  } border border-[#E5DAFF]`}
-                >
-                  Popular
+                  Oldest First
                 </button>
               </div>
             </div>
@@ -205,30 +205,38 @@ export default function Videos() {
           </div>
         ) : videos.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {videos.map((video) => (
-              <div key={video.id} className="pet-card bg-white overflow-hidden relative">
+            {videos.map((media) => (
+              <div key={media.id} className="pet-card bg-white overflow-hidden relative">
                 <div className="absolute -right-4 -top-4 rotate-12 text-2xl z-10">🐾</div>
                 <div className="relative">
-                  <video
-                    className="h-48 w-full object-cover"
-                    controls
-                    preload="metadata"
-                  >
-                    <source src={video.url} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
+                  {media.type === 'video' ? (
+                    <video
+                      className="h-48 w-full object-cover"
+                      controls
+                      preload="metadata"
+                    >
+                      <source src={media.url} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <img
+                      src={media.url}
+                      alt={media.name}
+                      className="h-48 w-full object-cover"
+                    />
+                  )}
                 </div>
                 <div className="p-5">
                   <h3 className="text-lg font-bold text-pet-purple">
-                    {video.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}
+                    {media.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}
                   </h3>
                   <div className="mt-2 flex items-center justify-between text-sm text-pet-gray">
-                    <span>Created: {formatDate(video.createdAt)}</span>
-                    <span>{formatFileSize(video.size)}</span>
+                    <span>Created: {formatDate(media.createdAt)}</span>
+                    <span>{formatFileSize(media.size)}</span>
                   </div>
                   <div className="mt-4 flex space-x-2">
                     <button 
-                      onClick={() => navigator.clipboard.writeText(video.url)}
+                      onClick={() => navigator.clipboard.writeText(media.url)}
                       className="paw-button inline-flex items-center rounded-full border border-[#E5DAFF] bg-white px-3 py-1.5 text-xs font-medium text-pet-purple shadow-sm hover:bg-[#F5F0FF]"
                     >
                       <svg className="mr-1.5 h-4 w-4 text-pet-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -237,8 +245,8 @@ export default function Videos() {
                       Copy Link
                     </button>
                     <a 
-                      href={video.url} 
-                      download={video.name}
+                      href={media.url} 
+                      download={media.name}
                       className="paw-button inline-flex items-center rounded-full border border-[#E5DAFF] bg-white px-3 py-1.5 text-xs font-medium text-pet-purple shadow-sm hover:bg-[#F5F0FF]"
                     >
                       <svg className="mr-1.5 h-4 w-4 text-pet-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -258,7 +266,7 @@ export default function Videos() {
             <p className="mt-2 text-pet-gray">Get started by creating your first pet video memory.</p>
             <div className="mt-6">
               <Link
-                href="/dashboard"
+                href="/generate"
                 className="paw-button inline-flex items-center rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
               >
                 Create First Memory

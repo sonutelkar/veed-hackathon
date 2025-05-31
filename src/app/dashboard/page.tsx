@@ -94,9 +94,9 @@ export default function Dashboard() {
         <div className="pet-card bg-white mb-8 relative overflow-hidden">
           <div className="absolute -right-4 -top-4 text-4xl rotate-12">🐾</div>
           <div className="px-6 py-8">
-            <h3 className="text-xl font-bold text-pet-purple mb-2">Create New Adventure</h3>
+            <h3 className="text-xl font-bold text-pet-purple mb-2">Upload your memories</h3>
             <div className="mb-4 text-pet-gray">
-              <p>Upload a photo of your pet and we'll generate an adventure video</p>
+              <p>Upload your memories which you can use to generate your pet adventures</p>
             </div>
             <div className="mt-5">
               <UploadDropzone />
@@ -118,7 +118,7 @@ export default function Dashboard() {
             <div className="mt-6">
               <Link
                 href="/videos"
-                className="paw-button inline-flex items-center rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+                className="paw-button inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
               >
                 View All Adventures
                 <svg className="ml-2 -mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
