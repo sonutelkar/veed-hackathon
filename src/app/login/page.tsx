@@ -53,7 +53,7 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6 pet-pattern-bg">
-      <div className="w-full max-w-md space-y-8 pet-card bg-white p-8">
+      <div className="w-full max-w-md space-y-8 pet-card p-8">
         <div className="text-center">
           <PetIcon size={60} className="mx-auto mb-4" />
           <h1 className="text-3xl font-bold pet-gradient-text">Welcome Back</h1>
@@ -61,13 +61,13 @@ function LoginForm() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
             {error}
           </div>
         )}
 
         {message && (
-          <div className="rounded-md bg-[#F0F7FF] p-4 text-sm text-pet-blue">
+          <div className="rounded-md bg-[#F0F7FF] dark:bg-[#1a2e44] p-4 text-sm text-pet-blue">
             {message}
           </div>
         )}
@@ -109,7 +109,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="paw-button flex w-full justify-center rounded-full bg-black bg-pet-purple px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+              className="paw-button flex w-full justify-center rounded-full bg-pet-purple px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
             >
               {isLoading ? 'Logging in...' : 'Log In'}
             </button>

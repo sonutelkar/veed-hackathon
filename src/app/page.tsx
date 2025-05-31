@@ -42,13 +42,13 @@ export default function Home() {
           <div className="flex justify-center gap-4">
             <Link
               href="/login"
-              className="paw-button rounded-full bg-black px-8 py-4 text-white font-medium shadow-lg hover:bg-pet-purple-light transition-all"
+              className="paw-button rounded-full bg-pet-purple px-8 py-4 text-white font-medium shadow-lg hover:bg-pet-purple-light transition-all"
             >
               Log In
             </Link>
             <Link
               href="/signup"
-              className="paw-button rounded-full border-2 border-pet-purple bg-white px-8 py-4 text-pet-purple font-medium shadow-lg hover:bg-[#F5F0FF] transition-all"
+              className="paw-button rounded-full border-2 border-pet-purple bg-pet-card-bg px-8 py-4 text-pet-purple font-medium shadow-lg hover:bg-[#F5F0FF] dark:hover:bg-[#2a1d40] transition-all"
             >
               Sign Up
             </Link>
@@ -56,19 +56,19 @@ export default function Home() {
         </div>
         
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="pet-card bg-white p-6">
+          <div className="pet-card p-6">
             <div className="mb-4 text-pet-purple text-4xl">📸</div>
             <h3 className="font-bold text-lg mb-2 text-pet-purple">Upload</h3>
             <p className="text-pet-gray">Share a photo of your beloved pet</p>
           </div>
           
-          <div className="pet-card bg-white p-6">
+          <div className="pet-card p-6">
             <div className="mb-4 text-pet-teal text-4xl">✨</div>
             <h3 className="font-bold text-lg mb-2 text-pet-teal">Transform</h3>
             <p className="text-pet-gray">Our AI works its magic</p>
           </div>
           
-          <div className="pet-card bg-white p-6">
+          <div className="pet-card p-6">
             <div className="mb-4 text-pet-pink text-4xl">🎬</div>
             <h3 className="font-bold text-lg mb-2 text-pet-pink">Adventure</h3>
             <p className="text-pet-gray">Watch your pet's epic journey unfold</p>
