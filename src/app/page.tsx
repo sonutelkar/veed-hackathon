@@ -40,7 +40,7 @@ export default function Home() {
           <div className="flex justify-center gap-4">
             <Link
               href="/login"
-              className="paw-button rounded-full bg-pet-purple px-8 py-4 text-white font-medium shadow-lg hover:bg-pet-purple-light transition-all"
+              className="paw-button rounded-full bg-black px-8 py-4 text-white font-medium shadow-lg hover:bg-pet-purple-light transition-all"
             >
               Log In
             </Link>
