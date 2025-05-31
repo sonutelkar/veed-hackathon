@@ -9,7 +9,9 @@ interface GenerateResponse {
   videoResults?: any[];
   stitchedVideo?: any;
   videoSummaries?: string[];
-  script?: string;
+  script?: any;
+  audioPath?: string;
+  avatarVideo?: any;
   // Add other response fields as needed
 }
 
@@ -32,7 +34,17 @@ interface VideoSummaryResponse {
 }
 
 interface ScriptResponse {
-  script: string;
+  script: Record<string, string>;
+}
+
+interface TTSResponse {
+  audio_path: string;
+}
+
+interface AvatarVideoResponse {
+  video_url?: string;
+  status?: string;
+  [key: string]: any;
 }
 
 export async function generateAdventure(
@@ -182,7 +194,9 @@ export async function generateAdventure(
                   videoSummaries = summaries.filter(summary => summary !== null) as string[];
                   
                   // Generate script using video summaries and scenes
-                  let script: string | undefined = undefined;
+                  let script: any = undefined;
+                  let audioPath: string | undefined = undefined;
+                  let avatarVideo: any = undefined;
                   
                   if (videoSummaries.length > 0) {
                     try {
@@ -205,11 +219,62 @@ export async function generateAdventure(
                       
                       if (scriptResponse.ok) {
                         const responseData = await scriptResponse.json();
-                        // Type check the response before assignment
-                        if (responseData && typeof responseData.script === 'string') {
-                          script = responseData.script;
-                        } else {
-                          console.error('Invalid script response format');
+                        // Store the script object
+                        script = responseData.script;
+                        
+                        // Generate text-to-speech from script
+                        if (script) {
+                          try {
+                            // Concatenate all script scenes into a single text
+                            const scriptText = Object.values(script).join(' ');
+                            
+                            // Make concurrent requests for TTS and avatar video
+                            const [ttsResponse, avatarResponse] = await Promise.all([
+                              // Call TTS endpoint
+                              fetch(`${API_URL}/tts-from-script/`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  text: scriptText
+                                }),
+                              }),
+                              // Call avatar video endpoint
+                              fetch(`${API_URL}/generate-avatar-video/`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  text_script: scriptText
+                                }),
+                              })
+                            ]);
+                            
+                            // Process TTS response
+                            let audioPathResult: string | undefined = undefined;
+                            if (ttsResponse.ok) {
+                              const ttsData: TTSResponse = await ttsResponse.json();
+                              audioPathResult = ttsData.audio_path;
+                            } else {
+                              console.error(`TTS API error: ${ttsResponse.status}`);
+                            }
+                            
+                            // Process avatar video response
+                            let avatarVideoResult: any = undefined;
+                            if (avatarResponse.ok) {
+                              avatarVideoResult = await avatarResponse.json();
+                            } else {
+                              console.error(`Avatar video API error: ${avatarResponse.status}`);
+                            }
+                            
+                            // Update variables with the results
+                            audioPath = audioPathResult;
+                            avatarVideo = avatarVideoResult;
+                          } catch (error) {
+                            console.error('Error generating media:', error);
+                          }
                         }
                       } else {
                         console.error(`Generate script API error: ${scriptResponse.status}`);
@@ -226,7 +291,9 @@ export async function generateAdventure(
                     videoResults,
                     stitchedVideo: stitchData,
                     videoSummaries,
-                    script
+                    script,
+                    audioPath,
+                    avatarVideo
                   };
                 } catch (error) {
                   console.error('Error processing videos:', error);
@@ -249,7 +316,9 @@ export async function generateAdventure(
       videoResults,
       stitchedVideo: undefined,
       videoSummaries,
-      script: undefined
+      script: undefined,
+      audioPath: undefined,
+      avatarVideo: undefined
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
