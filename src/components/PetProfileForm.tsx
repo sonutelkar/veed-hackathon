@@ -103,7 +103,7 @@ export default function PetProfileForm({ profile, userId, onProfileUpdate, onCan
       
       <div className="flex flex-col items-center mb-6">
         <div 
-          className="h-32 w-32 rounded-full overflow-hidden bg-pet-purple-light mb-4 cursor-pointer flex items-center justify-center relative"
+          className="h-32 w-32 rounded-full overflow-hidden bg-black mb-4 cursor-pointer flex items-center justify-center relative"
           onClick={handleImageClick}
         >
           {imagePreview ? (
@@ -198,7 +198,7 @@ export default function PetProfileForm({ profile, userId, onProfileUpdate, onCan
           <button
             type="button"
             onClick={onCancel}
-            className="paw-button inline-flex rounded-full border border-pet-purple px-6 py-3 text-sm font-medium text-pet-purple shadow-sm hover:bg-[#F5F0FF]"
+            className="paw-button inline-flex rounded-full border border-black px-6 py-3 text-sm font-medium text-black shadow-sm hover:bg-[#F5F0FF]"
           >
             Cancel
           </button>
@@ -206,7 +206,7 @@ export default function PetProfileForm({ profile, userId, onProfileUpdate, onCan
         <button
           type="submit"
           disabled={isSubmitting}
-          className="paw-button inline-flex rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+          className="paw-button inline-flex rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
         >
           {isSubmitting ? 'Saving...' : profile ? 'Update Profile' : 'Create Profile'}
         </button>
