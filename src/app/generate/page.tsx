@@ -9,7 +9,7 @@ import PetLoading from '@/components/PetLoading';
 import PetIcon from '@/components/PetIcon';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 
-interface VideoFile {
+interface ImageFile {
   id: string;
   name: string;
   url: string;
@@ -34,9 +34,10 @@ interface StorageFile {
 export default function Generate() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [videos, setVideos] = useState<VideoFile[]>([]);
-  const [isVideosLoading, setIsVideosLoading] = useState(true);
-  const [selectedVideos, setSelectedVideos] = useState<VideoFile[]>([]);
+  const [images, setImages] = useState<ImageFile[]>([]);
+  const [isImagesLoading, setIsImagesLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<ImageFile | null>(null);
+  const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationResult, setGenerationResult] = useState<string | null>(null);
 
@@ -47,10 +48,10 @@ export default function Generate() {
   }, [user, isLoading, router]);
 
   useEffect(() => {
-    async function fetchUserVideos() {
+    async function fetchUserImages() {
       if (!user) return;
       
-      setIsVideosLoading(true);
+      setIsImagesLoading(true);
       const supabase = supabaseBrowser();
       
       try {
@@ -61,16 +62,16 @@ export default function Generate() {
           .list(user.id);
         
         if (error) {
-          console.error('Error fetching videos:', error);
-          setIsVideosLoading(false);
+          console.error('Error fetching images:', error);
+          setIsImagesLoading(false);
           return;
         }
         
-        // Filter for video files only
-        const videoFiles = data
-          .filter((file: StorageFile) => file.name.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv)$/i))
+        // Filter for image files only
+        const imageFiles = data
+          .filter((file: StorageFile) => file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i))
           .map((file: StorageFile) => {
-            // Get public URL for each video
+            // Get public URL for each image
             const url = supabase.storage.from('videos').getPublicUrl(`${user.id}/${file.name}`).data.publicUrl;
             
             return {
@@ -83,39 +84,44 @@ export default function Generate() {
             };
           });
         
-        setVideos(videoFiles);
+        setImages(imageFiles);
       } catch (err) {
-        console.error('Unexpected error fetching videos:', err);
+        console.error('Unexpected error fetching images:', err);
       } finally {
-        setIsVideosLoading(false);
+        setIsImagesLoading(false);
       }
     }
     
     if (user) {
-      fetchUserVideos();
+      fetchUserImages();
     }
   }, [user]);
 
-  const handleVideoSelection = (videoId: string) => {
-    setVideos(prevVideos => {
-      const updatedVideos = prevVideos.map(video => {
-        if (video.id === videoId) {
-          return { ...video, selected: !video.selected };
+  const handleImageSelection = (imageId: string) => {
+    setImages(prevImages => {
+      const updatedImages = prevImages.map(image => {
+        if (image.id === imageId) {
+          return { ...image, selected: !image.selected };
         }
-        return video;
+        return { ...image, selected: false };
       });
       
-      // Update selected videos list
-      const selected = updatedVideos.filter(video => video.selected);
-      setSelectedVideos(selected);
+      // Update selected image
+      const selected = updatedImages.find(image => image.selected);
+      setSelectedImage(selected || null);
       
-      return updatedVideos;
+      return updatedImages;
     });
   };
 
   const handleGenerate = async () => {
-    if (selectedVideos.length === 0) {
-      alert('Please select at least one video to generate content');
+    if (!selectedImage) {
+      alert('Please select an image to generate content');
+      return;
+    }
+
+    if (!prompt.trim()) {
+      alert('Please enter a prompt');
       return;
     }
 
@@ -124,13 +130,14 @@ export default function Generate() {
     try {
       // Placeholder for API call
       // In a real implementation, you would make an API call here
-      console.log('Selected video URLs:', selectedVideos.map(v => v.url));
+      console.log('Selected image URL:', selectedImage.url);
+      console.log('Prompt:', prompt);
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Placeholder result
-      setGenerationResult('Generated content with your selected videos! (This is a placeholder result)');
+      setGenerationResult(`Generated content with your selected image and prompt: "${prompt}"! (This is a placeholder result)`);
     } catch (error) {
       console.error('Error generating content:', error);
       setGenerationResult('Error generating content. Please try again.');
@@ -168,9 +175,9 @@ export default function Generate() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold pet-gradient-text">Generate Content</h1>
+            <h1 className="text-3xl font-bold pet-gradient-text">Generate Pet Content</h1>
             <p className="mt-1 text-pet-gray">
-              Select videos from your memories to create something special
+              Enter a prompt and select an image to create something special
             </p>
           </div>
           <Link
@@ -181,22 +188,44 @@ export default function Generate() {
           </Link>
         </div>
 
+        {/* Prompt input */}
+        <div className="pet-card bg-white p-6 mb-6 shadow-lg">
+          <h2 className="text-xl font-bold text-pet-purple mb-3">
+            <span className="text-2xl mr-2">🐾</span> Enter Your Prompt
+          </h2>
+          <div className="relative">
+            <textarea
+              className="w-full px-4 py-3 border-2 border-[#E5DAFF] rounded-lg focus:outline-none focus:border-pet-purple transition-colors"
+              placeholder="Describe what you want to create with your pet's image..."
+              rows={3}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+            ></textarea>
+            <div className="absolute bottom-3 right-3 text-pet-gray text-sm">
+              {prompt.length}/500
+            </div>
+          </div>
+          <p className="text-sm text-pet-gray mt-2">
+            Examples: "Create a space adventure with my pet", "My pet as a superhero", "My pet in a magical forest"
+          </p>
+        </div>
+
         {/* Selection summary */}
         <div className="pet-card bg-white p-4 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-pet-purple">Selected Videos: {selectedVideos.length}</h2>
+              <h2 className="text-lg font-semibold text-pet-purple">Selected Image: {selectedImage ? '1' : '0'}</h2>
               <p className="text-sm text-pet-gray">
-                {selectedVideos.length > 0 
-                  ? 'Click on videos below to select or deselect them' 
-                  : 'Select videos from your gallery below'}
+                {selectedImage 
+                  ? 'Click on the selected image to deselect it' 
+                  : 'Select an image from your gallery below'}
               </p>
             </div>
             <button
               onClick={handleGenerate}
-              disabled={selectedVideos.length === 0 || isGenerating}
-              className={`paw-button inline-flex items-center rounded-full px-6 py-3 text-sm font-medium text-white shadow-lg transition-all
-                ${selectedVideos.length === 0 || isGenerating
+              disabled={!selectedImage || !prompt.trim() || isGenerating}
+              className={`paw-button mt-4 sm:mt-0 inline-flex items-center rounded-full px-6 py-3 text-sm font-medium text-white shadow-lg transition-all
+                ${!selectedImage || !prompt.trim() || isGenerating
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-pet-purple hover:bg-pet-purple-light'
                 }`}
@@ -209,7 +238,7 @@ export default function Generate() {
                   </svg>
                   Generating...
                 </>
-              ) : 'Generate Content'}
+              ) : 'Generate Content 🚀'}
             </button>
           </div>
         </div>
@@ -217,27 +246,30 @@ export default function Generate() {
         {/* Generation result */}
         {generationResult && (
           <div className="pet-card bg-white p-6 mb-6 border-2 border-pet-purple">
-            <h3 className="text-xl font-bold text-pet-purple mb-2">Generation Result</h3>
+            <div className="flex items-center mb-2">
+              <span className="text-2xl mr-2">✨</span>
+              <h3 className="text-xl font-bold text-pet-purple">Generation Result</h3>
+            </div>
             <p className="text-pet-gray">{generationResult}</p>
           </div>
         )}
 
-        {/* Video grid */}
-        {isVideosLoading ? (
+        {/* Image grid */}
+        {isImagesLoading ? (
           <div className="flex justify-center py-12">
             <PetLoading />
           </div>
-        ) : videos.length > 0 ? (
+        ) : images.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {videos.map((video) => (
+            {images.map((image) => (
               <div 
-                key={video.id} 
+                key={image.id} 
                 className={`pet-card bg-white overflow-hidden relative cursor-pointer transition-all
-                  ${video.selected ? 'ring-4 ring-pet-purple shadow-lg transform scale-[1.02]' : 'hover:shadow-md'}
+                  ${image.selected ? 'ring-4 ring-pet-purple shadow-lg transform scale-[1.02]' : 'hover:shadow-md'}
                 `}
-                onClick={() => handleVideoSelection(video.id)}
+                onClick={() => handleImageSelection(image.id)}
               >
-                {video.selected && (
+                {image.selected && (
                   <div className="absolute top-2 right-2 z-10 bg-pet-purple text-white rounded-full p-1">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -245,23 +277,20 @@ export default function Generate() {
                   </div>
                 )}
                 <div className="absolute -right-4 -top-4 rotate-12 text-2xl z-10">🐾</div>
-                <div className="relative">
-                  <video
-                    className="h-48 w-full object-cover"
-                    controls
-                    preload="metadata"
-                  >
-                    <source src={video.url} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img
+                    src={image.url}
+                    alt={image.name}
+                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                  />
                 </div>
                 <div className="p-5">
                   <h3 className="text-lg font-bold text-pet-purple">
-                    {video.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}
+                    {image.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}
                   </h3>
                   <div className="mt-2 flex items-center justify-between text-sm text-pet-gray">
-                    <span>Created: {formatDate(video.createdAt)}</span>
-                    <span>{formatFileSize(video.size)}</span>
+                    <span>Created: {formatDate(image.createdAt)}</span>
+                    <span>{formatFileSize(image.size)}</span>
                   </div>
                 </div>
               </div>
@@ -270,14 +299,14 @@ export default function Generate() {
         ) : (
           <div className="pet-card bg-white py-12 text-center">
             <PetIcon size={64} className="mx-auto mb-4 opacity-40" />
-            <h3 className="text-xl font-bold text-pet-purple">No memories available</h3>
-            <p className="mt-2 text-pet-gray">You need to create some pet videos before you can generate content.</p>
+            <h3 className="text-xl font-bold text-pet-purple">No images available</h3>
+            <p className="mt-2 text-pet-gray">You need to upload some pet images before you can generate content.</p>
             <div className="mt-6">
               <Link
                 href="/dashboard"
                 className="paw-button inline-flex items-center rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
               >
-                Create First Memory
+                Upload Images
               </Link>
             </div>
           </div>
