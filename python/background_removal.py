@@ -13,7 +13,7 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 SUPABASE_BUCKET = "videos"
-
+os.environ["SIEVE_API_KEY"] = os.getenv("SIEVE_API_KEY")
 
 def upload_to_supabase(file_path: str) -> str:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
@@ -52,12 +52,14 @@ def upload_to_supabase(file_path: str) -> str:
 
 
 def remove_background_from_supabase_url(image_url: str) -> str:
+    print(f"Removing background from image URL: {image_url}")  # Debug print
     response = requests.get(image_url)
     response.raise_for_status()
 
     with NamedTemporaryFile(delete=False, suffix=".png") as input_tmp:
         input_tmp.write(response.content)
         input_path = input_tmp.name
+        print(f"Temporary input file created: {input_path}")  # Debug print
 
     try:
         bgr_fn = sieve.function.get("sieve/background-removal")
@@ -68,6 +70,7 @@ def remove_background_from_supabase_url(image_url: str) -> str:
         with NamedTemporaryFile(delete=False, suffix=".png") as final_output:
             shutil.copy(output_file.path, final_output.name)
             final_output_path = final_output.name
+            print(f"Final output file created: {final_output_path}")  # Debug print
 
         # Upload to Supabase
         public_url = upload_to_supabase(final_output_path)
@@ -76,10 +79,13 @@ def remove_background_from_supabase_url(image_url: str) -> str:
     finally:
         if os.path.exists(input_path):
             os.remove(input_path)
+            print(f"Removed temporary input file: {input_path}")  # Debug print
         if 'output_file' in locals() and os.path.exists(output_file.path):
             os.remove(output_file.path)
+            print(f"Removed output file: {output_file.path}")  # Debug print
         if 'final_output_path' in locals() and os.path.exists(final_output_path):
             os.remove(final_output_path)
+            print(f"Removed final output file: {final_output_path}")  # Debug print
 
 
 if __name__ == "__main__":
