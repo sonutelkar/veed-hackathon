@@ -8,6 +8,10 @@ TEMP_DIR = "temp_videos"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 
+def get_filename_from_url(url: str) -> str:
+    return url.split("/")[-1].split("?")[0]
+
+
 def download_video(url: str, filename: str) -> str:
     response = requests.get(url)
     if response.status_code != 200:
@@ -19,10 +23,10 @@ def download_video(url: str, filename: str) -> str:
 
 
 def overlay_videos_and_upload(background_url: str, overlay_url: str) -> str:
-    # Generate temp file names
-    background_filename = f"{uuid.uuid4()}_background.mp4"
-    overlay_filename = f"{uuid.uuid4()}_overlay.mp4"
-    output_filename = f"{uuid.uuid4()}_output.mp4"
+    # Get original filenames from URLs
+    background_filename = get_filename_from_url(background_url)
+    overlay_filename = get_filename_from_url(overlay_url)
+    output_filename = f"overlayed_{background_filename}"
     output_path = os.path.join(TEMP_DIR, output_filename)
 
     # Download both videos
