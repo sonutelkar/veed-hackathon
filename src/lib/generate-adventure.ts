@@ -6,6 +6,7 @@ interface GenerateRequest {
 interface GenerateResponse {
   scenes: string[];
   backgroundRemovedUrl?: string;
+  videoResults?: any[];
   // Add other response fields as needed
 }
 
@@ -13,13 +14,21 @@ interface RemoveBackgroundResponse {
   background_removed_url: string;
 }
 
+interface MultiKlingResponse {
+  status: string;
+  results: {
+    prompt: string;
+    status: string;
+    result?: any;
+    error?: string;
+  }[];
+}
+
 export async function generateAdventure(
   prompt: string,
   imageUrl?: string
 ): Promise<GenerateResponse> {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-  console.log('API_URL', API_URL);
   
   if (!API_URL) {
     throw new Error('API URL not defined in environment variables');
@@ -66,19 +75,51 @@ export async function generateAdventure(
     
     // Process remove-background response if it was called
     let backgroundRemovedUrl = undefined;
+    let videoResults = undefined;
+    
     if (removeBackgroundPromise) {
       if (!results[1].ok) {
         console.error(`Remove background API error: ${results[1].status}`);
       } else {
         const backgroundData: RemoveBackgroundResponse = await results[1].json();
         backgroundRemovedUrl = backgroundData.background_removed_url;
+        
+        // If we have background removed image, call the generate-multiple-kling-videos endpoint
+        if (backgroundRemovedUrl && scenesData.scenes) {
+          try {
+            // Extract scene values and prepare prompts array
+            const scenePrompts = Object.values(scenesData.scenes);
+            
+            // Call generate-multiple-kling-videos API
+            const klingResponse = await fetch(`${API_URL}/generate-multiple-kling-videos/`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                prompts: scenePrompts,
+                image_url: backgroundRemovedUrl,
+              }),
+            });
+            
+            if (klingResponse.ok) {
+              const klingData: MultiKlingResponse = await klingResponse.json();
+              videoResults = klingData.results;
+            } else {
+              console.error(`Generate multiple kling videos API error: ${klingResponse.status}`);
+            }
+          } catch (error) {
+            console.error('Error generating kling videos:', error);
+          }
+        }
       }
     }
     
     // Combine results
     return {
       scenes: scenesData.scenes,
-      backgroundRemovedUrl
+      backgroundRemovedUrl,
+      videoResults
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
