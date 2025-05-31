@@ -8,6 +8,9 @@ import Navbar from '@/components/Navbar';
 import PetLoading from '@/components/PetLoading';
 import PetIcon from '@/components/PetIcon';
 import { supabaseBrowser } from '@/lib/supabase-browser';
+import { PetProfile, getPetProfileByUserId } from '@/lib/pet-profile-service';
+import PetProfileForm from '@/components/PetProfileForm';
+import { getPetFollowerCount, getFollowedPets } from '@/lib/follow-service';
 
 interface VideoFile {
   id: string;
@@ -38,12 +41,41 @@ export default function Videos() {
   const [videos, setVideos] = useState<VideoFile[]>([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [isVideosLoading, setIsVideosLoading] = useState(true);
+  const [petProfile, setPetProfile] = useState<PetProfile | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [stats, setStats] = useState({
+    posts: 0,
+    followers: 0,
+    following: 0
+  });
+  const [mediaLikes, setMediaLikes] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login');
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    async function fetchPetProfile() {
+      if (!user) return;
+      
+      setIsProfileLoading(true);
+      try {
+        const profile = await getPetProfileByUserId(user.id);
+        setPetProfile(profile);
+      } catch (err) {
+        console.error('Error fetching pet profile:', err);
+      } finally {
+        setIsProfileLoading(false);
+      }
+    }
+    
+    if (user) {
+      fetchPetProfile();
+    }
+  }, [user]);
 
   useEffect(() => {
     async function fetchUserVideos() {
@@ -84,6 +116,7 @@ export default function Videos() {
           });
         
         setVideos(mediaFiles);
+        setStats(prev => ({ ...prev, posts: mediaFiles.length }));
       } catch (err) {
         console.error('Unexpected error fetching videos:', err);
       } finally {
@@ -95,6 +128,37 @@ export default function Videos() {
       fetchUserVideos();
     }
   }, [user]);
+
+  useEffect(() => {
+    async function fetchFollowerStats() {
+      if (!user || !petProfile) return;
+      
+      try {
+        // Get followers count for this pet
+        const followerCount = await getPetFollowerCount(petProfile.id);
+        
+        // Get count of pets this user follows
+        const followedPets = await getFollowedPets(user.id);
+        
+        setStats(prev => ({
+          ...prev,
+          followers: followerCount,
+          following: followedPets.length
+        }));
+      } catch (err) {
+        console.error('Error fetching follower stats:', err);
+      }
+    }
+    
+    if (petProfile) {
+      fetchFollowerStats();
+    }
+  }, [user, petProfile]);
+
+  const handleProfileUpdate = (updatedProfile: PetProfile) => {
+    setPetProfile(updatedProfile);
+    setShowEditProfile(false);
+  };
 
   if (isLoading) {
     return <PetLoading />;
@@ -131,26 +195,136 @@ export default function Videos() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Function to get random but stable like count for a media item
+  const getLikeCount = (mediaId: string) => {
+    if (mediaLikes[mediaId] !== undefined) {
+      return mediaLikes[mediaId];
+    }
+    
+    // Create a stable pseudo-random number based on the media ID
+    const hash = mediaId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    // Generate a number between 5 and 150
+    const likeCount = Math.abs(hash % 146) + 5;
+    
+    // Store it for consistency
+    setMediaLikes(prev => ({
+      ...prev,
+      [mediaId]: likeCount
+    }));
+    
+    return likeCount;
+  };
+
+  // Function to get random but stable comment count for a media item
+  const getCommentCount = (mediaId: string) => {
+    // Create a different hash than likes
+    const hash = mediaId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 4) - acc);
+    }, 0);
+    
+    // Generate a number between 0 and 30
+    return Math.abs(hash % 31);
+  };
+
   return (
     <div className="min-h-screen pet-pattern-bg">
       <Navbar />
 
-      {/* Main content */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold pet-gradient-text">My Memories</h1>
-            <p className="mt-1 text-pet-gray">
-              View and share your pet's amazing moments
-            </p>
+      {/* Profile Header */}
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
+        {isProfileLoading ? (
+          <div className="flex justify-center py-8">
+            <PetLoading />
           </div>
-          <Link
-            href="/generate"
-            className="paw-button inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
-          >
-            Create New Adventure
-          </Link>
-        </div>
+        ) : showEditProfile ? (
+          <div className="pet-card bg-white p-8 mb-8">
+            <h2 className="text-2xl font-bold text-pet-purple mb-6">
+              {petProfile ? 'Edit Pet Profile' : 'Create Pet Profile'}
+            </h2>
+            <PetProfileForm 
+              profile={petProfile} 
+              userId={user.id} 
+              onProfileUpdate={handleProfileUpdate}
+              onCancel={() => setShowEditProfile(false)}
+            />
+          </div>
+        ) : (
+          <div className="pet-card bg-white p-6 mb-8">
+            <div className="md:flex items-start">
+              {/* Profile Image */}
+              <div className="flex-shrink-0 mx-auto md:mx-0 mb-4 md:mb-0">
+                <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-2 border-pet-purple">
+                  {petProfile?.profile_image_url ? (
+                    <img 
+                      src={petProfile.profile_image_url} 
+                      alt={petProfile.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-pet-purple flex items-center justify-center">
+                      <span className="text-white text-5xl">🐾</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Profile Info */}
+              <div className="flex-1 md:ml-8 text-center md:text-left">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                  <h1 className="text-3xl font-bold pet-gradient-text mb-2 md:mb-0">
+                    {petProfile?.name || 'My Pet'}
+                  </h1>
+                  <div className="flex justify-center md:justify-start space-x-2">
+                    <button
+                      onClick={() => setShowEditProfile(true)}
+                      className="paw-button inline-flex items-center rounded-full bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-pet-purple-light"
+                    >
+                      {petProfile ? 'Edit Profile' : 'Create Profile'}
+                    </button>
+                    <Link
+                      href="/generate"
+                      className="paw-button inline-flex items-center rounded-full border border-pet-purple px-4 py-2 text-sm font-medium text-pet-purple shadow-sm hover:bg-[#F5F0FF]"
+                    >
+                      New Post
+                    </Link>
+                  </div>
+                </div>
+                
+                {/* Stats */}
+                <div className="flex justify-center md:justify-start space-x-8 mb-4">
+                  <div className="text-center">
+                    <span className="block font-bold text-gray-800">{stats.posts}</span>
+                    <span className="text-sm text-pet-gray">posts</span>
+                  </div>
+                  <div className="text-center">
+                    <span className="block font-bold text-gray-800">{stats.followers}</span>
+                    <span className="text-sm text-pet-gray">followers</span>
+                  </div>
+                  <div className="text-center">
+                    <span className="block font-bold text-gray-800">{stats.following}</span>
+                    <span className="text-sm text-pet-gray">following</span>
+                  </div>
+                </div>
+                
+                {/* Bio */}
+                {petProfile && (
+                  <div className="mb-4">
+                    {petProfile.breed && (
+                      <p className="font-medium text-gray-700">{petProfile.breed}</p>
+                    )}
+                    {petProfile.age && (
+                      <p className="text-gray-700">{petProfile.age} years old</p>
+                    )}
+                    <p className="text-gray-600 mt-1">{petProfile.bio}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="pet-card bg-white p-4 mb-6">
@@ -162,7 +336,7 @@ export default function Videos() {
                   onClick={() => filterVideos('newest')}
                   className={`relative -ml-px inline-flex items-center px-4 py-2 text-sm font-medium ${
                     activeFilter === 'newest'
-                      ? 'bg-pet-purple text-purple'
+                      ? 'bg-pet-purple text-white'
                       : 'bg-white text-pet-purple hover:bg-[#F5F0FF]'
                   } border border-[#E5DAFF]`}
                 >
@@ -173,7 +347,7 @@ export default function Videos() {
                   onClick={() => filterVideos('oldest')}
                   className={`relative -ml-px inline-flex items-center px-4 py-2 text-sm font-medium ${
                     activeFilter === 'oldest'
-                      ? 'bg-pet-purple text-purple'
+                      ? 'bg-pet-purple text-white'
                       : 'bg-white text-pet-purple hover:bg-[#F5F0FF]'
                   } border border-[#E5DAFF]`}
                 >
@@ -198,62 +372,56 @@ export default function Videos() {
           </div>
         </div>
 
-        {/* Video grid */}
+        {/* Instagram-style grid */}
         {isVideosLoading ? (
           <div className="flex justify-center py-12">
             <PetLoading />
           </div>
         ) : videos.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-3 gap-1 sm:gap-2">
             {videos.map((media) => (
-              <div key={media.id} className="pet-card bg-white overflow-hidden relative">
-                <div className="absolute -right-4 -top-4 rotate-12 text-2xl z-10">🐾</div>
-                <div className="relative">
-                  {media.type === 'video' ? (
+              <div key={media.id} className="relative aspect-square overflow-hidden bg-gray-100 group">
+                {media.type === 'video' ? (
+                  <>
+                    <div className="absolute top-2 right-2 z-10">
+                      <svg className="h-6 w-6 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
                     <video
-                      className="h-48 w-full object-cover"
-                      controls
+                      className="h-full w-full object-cover cursor-pointer"
                       preload="metadata"
+                      onClick={() => window.open(media.url, '_blank')}
                     >
                       <source src={media.url} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
-                  ) : (
-                    <img
-                      src={media.url}
-                      alt={media.name}
-                      className="h-48 w-full object-cover"
-                    />
-                  )}
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-bold text-pet-purple">
-                    {media.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}
-                  </h3>
-                  <div className="mt-2 flex items-center justify-between text-sm text-pet-gray">
-                    <span>Created: {formatDate(media.createdAt)}</span>
-                    <span>{formatFileSize(media.size)}</span>
-                  </div>
-                  <div className="mt-4 flex space-x-2">
-                    <button 
-                      onClick={() => navigator.clipboard.writeText(media.url)}
-                      className="paw-button inline-flex items-center rounded-full border border-[#E5DAFF] bg-white px-3 py-1.5 text-xs font-medium text-pet-purple shadow-sm hover:bg-[#F5F0FF]"
-                    >
-                      <svg className="mr-1.5 h-4 w-4 text-pet-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </>
+                ) : (
+                  <img
+                    src={media.url}
+                    alt={media.name}
+                    className="h-full w-full object-cover cursor-pointer"
+                    onClick={() => window.open(media.url, '_blank')}
+                  />
+                )}
+                
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center space-x-4 text-white">
+                    <div className="flex items-center">
+                      <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
-                      Copy Link
-                    </button>
-                    <a 
-                      href={media.url} 
-                      download={media.name}
-                      className="paw-button inline-flex items-center rounded-full border border-[#E5DAFF] bg-white px-3 py-1.5 text-xs font-medium text-pet-purple shadow-sm hover:bg-[#F5F0FF]"
-                    >
-                      <svg className="mr-1.5 h-4 w-4 text-pet-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      <span>{getLikeCount(media.id)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
-                      Download
-                    </a>
+                      <span>{getCommentCount(media.id)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -262,14 +430,14 @@ export default function Videos() {
         ) : (
           <div className="pet-card bg-white py-12 text-center">
             <PetIcon size={64} className="mx-auto mb-4 opacity-40" />
-            <h3 className="text-xl font-bold text-pet-purple">No memories yet</h3>
-            <p className="mt-2 text-pet-gray">Get started by creating your first pet video memory.</p>
+            <h3 className="text-xl font-bold text-pet-purple">No posts yet</h3>
+            <p className="mt-2 text-pet-gray">Share your first pet memory and start building your profile.</p>
             <div className="mt-6">
               <Link
                 href="/generate"
                 className="paw-button inline-flex items-center rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
               >
-                Create First Memory
+                Create First Post
               </Link>
             </div>
           </div>
