@@ -1,0 +1,20 @@
+import asyncio
+import fal_client
+
+async def generate_kling_video(prompt, image_url_1, image_url_2):
+    try:
+        handler = await fal_client.submit_async(
+            "fal-ai/kling-video/v1.6/standard/elements",
+            arguments={
+                "prompt": prompt,
+                "input_image_urls": [image_url_1], 
+                "input_image_urls_2": [image_url_2]
+            },
+        )
+
+        # Get the initial response
+        result = await handler.get()
+        return result
+
+    except Exception as e:
+        raise Exception(f"Error generating Kling video: {str(e)}")
