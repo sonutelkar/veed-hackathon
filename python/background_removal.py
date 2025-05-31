@@ -94,7 +94,7 @@ def remove_background_from_video_url(video_url: str) -> str:
         input_file = sieve.File(path=input_path)
 
         # Set parameters for background removal
-        backend = "vanish"
+        backend = "parallax"
         background_color_rgb = "-1"  # Transparent background
         background_media = sieve.File(url="")  # Optional: provide a background media URL
         output_type = "masked_frame"
@@ -102,7 +102,7 @@ def remove_background_from_video_url(video_url: str) -> str:
         yield_output_batches = False
         start_frame = 0
         end_frame = -1
-        vanish_allow_scene_splitting = True
+        # vanish_allow_scene_splitting = True
 
         # Run the background removal process
         output = background_removal.push(
@@ -114,22 +114,26 @@ def remove_background_from_video_url(video_url: str) -> str:
             video_output_format,
             yield_output_batches,
             start_frame,
-            end_frame,
-            vanish_allow_scene_splitting
+            end_frame
+            # vanish_allow_scene_splitting
         )
 
         print('Processing video in the background...')
 
         for output_object in output.result():
+            print(output_object, output_object.path)
             processed_video_path = output_object.path
             print(f"Processed video saved at: {processed_video_path}")
+            
+            size_mb = os.path.getsize(processed_video_path) / 1024 / 1024
+            print(f"[DEBUG] Final video file size: {size_mb:.2f} MB")
 
             # Convert if it's .mov
             if processed_video_path.lower().endswith(".mov"):
                 print(f"Video is .mov file format")
                 processed_video_path = convert_mov_to_mp4(processed_video_path)
 
-            print()
+            print(f"Ready to upload...")
             public_url = upload_to_supabase(processed_video_path, content_type="video/mp4")
             print(f"Uploaded processed video to Supabase: {public_url}")
             return public_url
@@ -149,7 +153,8 @@ if __name__ == "__main__":
     video_url = "https://v3.fal.media/files/monkey/ZF4I_LbXueILl05SjAKV2_tmpkk6ff5v3.mp4"
 
     try:
-        result_url = remove_background_from_video_url(video_url)
-        print("Final Public URL:", result_url)
+        # result_url = remove_background_from_video_url(video_url)
+        # print("Final Public URL:", result_url)
+        convert_mov_to_mp4(input_path="test.mov")
     except Exception as e:
         print("Error:", e)

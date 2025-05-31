@@ -23,6 +23,10 @@ def upload_to_supabase(file_path: str, content_type: str = "image/png") -> str:
         unique_filename = f"{filename}-{uuid.uuid4()}.mp3"
     elif content_type == "video/mp4":
         unique_filename = f"{filename}-{uuid.uuid4()}.mp4"
+    elif content_type == "video/quicktime":
+        unique_filename = f"{filename}-{uuid.uuid4()}.mov"
+    elif content_type == "video/webm":
+        unique_filename = f"{filename}-{uuid.uuid4()}.webm"
     else:
         raise Exception(f"Unsupported content type: {content_type}")
 

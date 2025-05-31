@@ -42,7 +42,7 @@ class ScriptRequest(BaseModel):
     scenes: dict[str, str]
 
 class BackgroundRemovalRequest(BaseModel):
-    image_url: str
+    url: str
 
 class KlingRequest(BaseModel):
     prompt: str
@@ -252,5 +252,13 @@ async def kling_duet(request: KlingDuetRequest):
     try:
         result = await generate_kling_duet(request.prompt, request.image_url_1, request.image_url_2)
         return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/remove-background-video/")
+async def remove_background(request: BackgroundRemovalRequest):
+    try:
+        result_url = background_removal.remove_background_from_video_url(request.url)
+        return {"background_removed_url": result_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
