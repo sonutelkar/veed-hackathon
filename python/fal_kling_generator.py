@@ -1,7 +1,7 @@
 import asyncio
 import fal_client
 
-async def generate_kling_video(prompt, image_url_1, image_url_2):
+async def generate_kling_video(prompt, image_url_1):
     try:
         handler = await fal_client.submit_async(
             "fal-ai/kling-video/v1.6/standard/elements",
@@ -23,7 +23,6 @@ async def example_generation():
     result = await generate_kling_video(
         "A cute girl and a baby cow sleeping together on a bed",
         "https://storage.googleapis.com/falserverless/web-examples/kling-elements/first_image.jpeg",
-        "https://storage.googleapis.com/falserverless/web-examples/kling-elements/second_image.png"
     )
     print(result)
 
