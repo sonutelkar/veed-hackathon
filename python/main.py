@@ -56,7 +56,7 @@ class TTSRequest(BaseModel):
     text: str
 
 class AvatarRequest(BaseModel):
-    text_script: str
+    audio_url: str
 
 class VideoAudioRequest(BaseModel):
     video_url: str
@@ -219,7 +219,7 @@ async def generate_tts_from_script(request: TTSRequest):
 @app.post("/generate-avatar-video/")
 async def avatar_video(request: AvatarRequest):
     try:
-        result = await generate_avatar_video(request.text_script)
+        result = await generate_avatar_video(request.audio_url)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
