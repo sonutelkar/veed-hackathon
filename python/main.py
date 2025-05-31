@@ -8,6 +8,7 @@ from fal_kling_generator import generate_kling_video
 import background_removal
 from elevenlabs.client import ElevenLabs
 from fastapi.middleware.cors import CORSMiddleware
+from tts import tts_from_script
 
 from dotenv import load_dotenv
 
@@ -195,8 +196,9 @@ async def remove_background(request: BackgroundRemovalRequest):
 async def generate_tts_from_script(text: TTSRequest):
     try:
 
-        audio_path = generate_tts_script(text.text)
+        audio_path = tts_from_script(text.text)
 
         return {"audio_path": audio_path}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

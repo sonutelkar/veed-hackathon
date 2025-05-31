@@ -14,7 +14,7 @@ if not ELEVENLABS_API_KEY:
 elevenlabs = ElevenLabs(api_key=ELEVENLABS_API_KEY)
 
 
-def generate_tts_from_script(script):
+def tts_from_script(script):
     try:
         # Generate the audio as a stream of chunks (generator)
         audio_generator = elevenlabs.text_to_speech.convert(
