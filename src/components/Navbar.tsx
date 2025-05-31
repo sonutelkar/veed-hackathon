@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import PetIcon from './PetIcon';
 
@@ -9,6 +10,7 @@ export default function Navbar() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [showMenu, setShowMenu] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -63,16 +65,38 @@ export default function Navbar() {
           </div>
           <div className="flex items-center">
             <div className="flex items-center gap-3">
-              <span className="text-sm text-[#667085]">{user.email}</span>
-              <div className="h-8 w-8 rounded-full bg-[#8A4FFF] text-center text-sm font-bold uppercase text-white flex items-center justify-center">
-                {user.email?.[0] || 'P'}
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <span className="text-sm text-[#667085] hidden sm:inline">{user.email}</span>
+                  <div className="h-8 w-8 rounded-full bg-[#8A4FFF] text-center text-sm font-bold uppercase text-white flex items-center justify-center">
+                    {user.email?.[0] || 'P'}
+                  </div>
+                </button>
+                
+                {showMenu && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-[#667085] hover:bg-[#F5F0FF]"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      Your Profile
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        handleSignOut();
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-[#667085] hover:bg-[#F5F0FF]"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleSignOut}
-                className="ml-2 paw-button rounded-full bg-white px-4 py-2 text-sm font-medium text-[#8A4FFF] hover:bg-[#F5F0FF] border border-[#E5DAFF] transition-all"
-              >
-                Sign Out
-              </button>
             </div>
           </div>
         </div>

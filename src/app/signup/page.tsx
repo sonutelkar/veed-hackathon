@@ -4,10 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import PetIcon from '@/components/PetIcon';
+import PetLoading from '@/components/PetLoading';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -19,8 +22,15 @@ export default function SignUp() {
     setIsLoading(true);
 
     try {
-      await signUp(email, password);
-      router.push('/login?message=Please check your email to verify your account');
+      const response = await signUp(email, password, fullName);
+      
+      // Check if there's a user and we need email confirmation
+      if (response.data?.user && response.data?.session === null) {
+        router.push('/login?message=Please check your email to verify your account');
+      } else if (response.data?.session) {
+        // User is automatically signed in (if email confirmation is disabled)
+        router.push('/dashboard');
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred during signup');
     } finally {
@@ -28,12 +38,17 @@ export default function SignUp() {
     }
   };
 
+  if (isLoading) {
+    return <PetLoading />;
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-8 rounded-lg border p-6 shadow-md">
+    <div className="flex min-h-screen flex-col items-center justify-center p-6 pet-pattern-bg">
+      <div className="w-full max-w-md space-y-8 pet-card bg-white p-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Sign Up</h1>
-          <p className="mt-2 text-gray-600">Create your account to get started</p>
+          <PetIcon size={60} className="mx-auto mb-4" />
+          <h1 className="text-3xl font-bold pet-gradient-text">Join PetVentures</h1>
+          <p className="mt-2 text-pet-gray">Create your account to get started</p>
         </div>
 
         {error && (
@@ -44,7 +59,23 @@ export default function SignUp() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="fullName" className="block text-sm font-medium text-pet-gray">
+              Full Name
+            </label>
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="pet-input mt-1 block w-full"
+              placeholder="Enter your full name"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-pet-gray">
               Email address
             </label>
             <input
@@ -54,13 +85,13 @@ export default function SignUp() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="pet-input mt-1 block w-full"
               placeholder="Enter your email"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-medium text-pet-gray">
               Password
             </label>
             <input
@@ -70,7 +101,7 @@ export default function SignUp() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="pet-input mt-1 block w-full"
               placeholder="Create a password"
             />
           </div>
@@ -79,16 +110,16 @@ export default function SignUp() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+              className="paw-button flex w-full justify-center rounded-full bg-black bg-pet-purple hover:bg-pet-purple-light px-4 py-3 text-sm font-medium text-white shadow-lg transition-all"
             >
               {isLoading ? 'Signing up...' : 'Sign Up'}
             </button>
           </div>
         </form>
 
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-4 text-center text-sm text-pet-gray">
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/login" className="font-medium text-pet-purple hover:underline">
             Log in
           </Link>
         </div>

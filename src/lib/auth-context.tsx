@@ -1,13 +1,14 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import { User, Session, AuthChangeEvent, AuthResponse } from '@supabase/supabase-js';
 import { supabaseBrowser } from './supabase-browser';
+import { createUser } from './users-service';
 
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<AuthResponse>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -40,12 +41,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    // Create the auth user
+    const response = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName || '',
+        },
+      },
     });
-    if (error) throw error;
+    
+    if (response.error) throw response.error;
+    
+    // Create user in the users table using the service role
+    // Note: In many cases, this is handled by a database trigger,
+    // but we're also handling it here as a backup
+    if (response.data.user) {
+      try {
+        await createUser(response.data.user);
+      } catch (error) {
+        console.error("Error creating user profile:", error);
+        // We don't throw here as the auth user was already created
+      }
+    }
+    
+    return response;
   };
 
   const signIn = async (email: string, password: string) => {
