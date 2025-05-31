@@ -8,6 +8,7 @@ interface GenerateResponse {
   backgroundRemovedUrl?: string;
   videoResults?: any[];
   stitchedVideo?: any;
+  videoSummaries?: string[];
   // Add other response fields as needed
 }
 
@@ -23,6 +24,10 @@ interface MultiKlingResponse {
     result?: any;
     error?: string;
   }[];
+}
+
+interface VideoSummaryResponse {
+  summaries: string[];
 }
 
 export async function generateAdventure(
@@ -77,6 +82,7 @@ export async function generateAdventure(
     // Process remove-background response if it was called
     let backgroundRemovedUrl = undefined;
     let videoResults = undefined;
+    let videoSummaries = undefined;
     
     if (removeBackgroundPromise) {
       if (!results[1].ok) {
@@ -115,30 +121,57 @@ export async function generateAdventure(
               // Call stitch-scenes endpoint if we have videos to stitch
               if (videoUrls.length > 0) {
                 try {
-                  const stitchResponse = await fetch(`${API_URL}/stitch-scenes/`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      scenes: videoUrls
+                  // Make concurrent requests for stitching and summarizing videos
+                  const [stitchResponse, summaryResponse] = await Promise.all([
+                    // Stitch scenes
+                    fetch(`${API_URL}/stitch-scenes/`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        scenes: videoUrls
+                      }),
                     }),
-                  });
+                    // Summarize videos
+                    fetch(`${API_URL}/summary-of-videos/`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        videos: videoUrls,
+                        prompt: "Summarise the video as if you were a David Attenborough style wildlife presenter"
+                      }),
+                    })
+                  ]);
                   
+                  // Process stitch response
+                  let stitchData;
                   if (stitchResponse.ok) {
-                    const stitchData = await stitchResponse.json();
-                    // Add stitched video URL to the response
-                    return {
-                      scenes: scenesData.scenes,
-                      backgroundRemovedUrl,
-                      videoResults,
-                      stitchedVideo: stitchData
-                    };
+                    stitchData = await stitchResponse.json();
                   } else {
                     console.error(`Stitch scenes API error: ${stitchResponse.status}`);
                   }
+                  
+                  // Process summary response
+                  if (summaryResponse.ok) {
+                    const summaryData: VideoSummaryResponse = await summaryResponse.json();
+                    videoSummaries = summaryData.summaries;
+                  } else {
+                    console.error(`Video summary API error: ${summaryResponse.status}`);
+                  }
+                  
+                  // Return complete response with all data
+                  return {
+                    scenes: scenesData.scenes,
+                    backgroundRemovedUrl,
+                    videoResults,
+                    stitchedVideo: stitchData,
+                    videoSummaries
+                  };
                 } catch (error) {
-                  console.error('Error stitching videos:', error);
+                  console.error('Error processing videos:', error);
                 }
               }
             } else {
@@ -156,7 +189,8 @@ export async function generateAdventure(
       scenes: scenesData.scenes,
       backgroundRemovedUrl,
       videoResults,
-      stitchedVideo: undefined
+      stitchedVideo: undefined,
+      videoSummaries
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
