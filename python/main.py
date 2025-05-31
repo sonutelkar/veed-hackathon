@@ -34,6 +34,9 @@ class VideoRequest(BaseModel):
     video_url: str
     prompt: str
 
+class SceneStitchRequest(BaseModel):
+    scenes: list[str]
+
 class ScriptRequest(BaseModel):
     video_summaries: list[str]
     scenes: dict[str, str]
@@ -225,6 +228,15 @@ async def avatar_video(request: AvatarRequest):
 async def lip_sync(request: VideoAudioRequest):
     try:
         result = await lip_sync_video_audio(request.video_url, request.audio_url)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/stitch-scenes/")
+async def stitch_scenes(request: SceneStitchRequest):
+    try:
+        result = await generate_ffmpeg_comp(request.SceneStitchRequest)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
