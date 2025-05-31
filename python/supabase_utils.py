@@ -21,6 +21,8 @@ def upload_to_supabase(file_path: str, content_type: str = "image/png") -> str:
         unique_filename = f"{filename}-{uuid.uuid4()}.png"
     elif content_type == "audio/mpeg":
         unique_filename = f"{filename}-{uuid.uuid4()}.mp3"
+    elif content_type == "video/mp4":
+        unique_filename = f"{filename}-{uuid.uuid4()}.mp4"
     else:
         raise Exception(f"Unsupported content type: {content_type}")
 
@@ -36,6 +38,7 @@ def upload_to_supabase(file_path: str, content_type: str = "image/png") -> str:
     # Handle both object and dict responses
     error = getattr(res, "error", None)
     if error:
+        print(f"Upload failed: {getattr(error, 'message', str(error))}")
         raise Exception(f"Upload failed: {getattr(error, 'message', str(error))}")
 
     # Get public URL
@@ -49,6 +52,7 @@ def upload_to_supabase(file_path: str, content_type: str = "image/png") -> str:
     elif isinstance(public_url_response, dict):
         public_url = public_url_response.get("publicUrl")
     else:
+        print("Could not determine public URL from response")
         raise Exception("Could not determine public URL from response")
 
     print(f"Uploaded to Supabase: {public_url}")
