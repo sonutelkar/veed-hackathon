@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import PetLoading from '@/components/PetLoading';
 import PetIcon from '@/components/PetIcon';
 import { supabaseBrowser } from '@/lib/supabase-browser';
+import { generateAdventure } from '@/lib/generate-adventure';
 
 interface ImageFile {
   id: string;
@@ -40,6 +41,7 @@ export default function Generate() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationResult, setGenerationResult] = useState<string | null>(null);
+  const [generatedScenes, setGeneratedScenes] = useState<string[]>([]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -128,16 +130,14 @@ export default function Generate() {
     setIsGenerating(true);
     
     try {
-      // Placeholder for API call
-      // In a real implementation, you would make an API call here
-      console.log('Selected image URL:', selectedImage.url);
-      console.log('Prompt:', prompt);
+      // Call the API to generate adventure
+      const result = await generateAdventure(prompt, selectedImage.url);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Set the generated scenes
+      setGeneratedScenes(result.scenes);
       
-      // Placeholder result
-      setGenerationResult(`Generated content with your selected image and prompt: "${prompt}"! (This is a placeholder result)`);
+      // Set a summary result message
+      setGenerationResult(`Generated a pet adventure with ${result.scenes.length} scenes!`);
     } catch (error) {
       console.error('Error generating content:', error);
       setGenerationResult('Error generating content. Please try again.');
@@ -251,6 +251,19 @@ export default function Generate() {
               <h3 className="text-xl font-bold text-pet-purple">Generation Result</h3>
             </div>
             <p className="text-pet-gray">{generationResult}</p>
+            
+            {generatedScenes.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-lg font-semibold text-pet-purple mb-2">Your Pet's Adventure</h4>
+                <div className="space-y-4">
+                  {generatedScenes.map((scene, index) => (
+                    <div key={index} className="p-4 bg-[#F9F5FF] rounded-lg">
+                      <p className="text-pet-gray">{scene}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
