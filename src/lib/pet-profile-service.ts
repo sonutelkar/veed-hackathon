@@ -91,44 +91,52 @@ export async function updatePetProfile(
 export async function setPetProfileImage(userId: string, profileId: string, file: File): Promise<string | null> {
   const supabase = supabaseBrowser();
   
-  // Upload the image to storage
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${profileId}-${Date.now()}.${fileExt}`;
-  const filePath = `${userId}/${fileName}`;
-  
-  const { error: uploadError } = await supabase
-    .storage
-    .from('profile_images')
-    .upload(filePath, file);
-  
-  if (uploadError) {
-    console.error('Error uploading profile image:', uploadError);
+  try {
+    // Upload the image to the 'videos' bucket under user's UID
+    const fileExt = file.name.split('.').pop();
+    const fileName = `profile-${profileId}-${Date.now()}.${fileExt}`;
+    const filePath = `${userId}/${fileName}`;
+    
+    const { error: uploadError } = await supabase
+      .storage
+      .from('videos')
+      .upload(filePath, file, {
+        contentType: file.type,
+        upsert: true
+      });
+    
+    if (uploadError) {
+      console.error('Error uploading profile image:', uploadError);
+      return null;
+    }
+    
+    // Get the public URL for the uploaded image
+    const { data } = supabase
+      .storage
+      .from('videos')
+      .getPublicUrl(filePath);
+    
+    const publicUrl = data.publicUrl;
+    
+    // Update the pet profile with the new image URL
+    const { error: updateError } = await supabase
+      .from('pet_profiles')
+      .update({
+        profile_image_url: publicUrl,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', profileId);
+    
+    if (updateError) {
+      console.error('Error updating profile with new image:', updateError);
+      return null;
+    }
+    
+    return publicUrl;
+  } catch (error) {
+    console.error('Unexpected error in setPetProfileImage:', error);
     return null;
   }
-  
-  // Get the public URL for the uploaded image
-  const { data } = supabase
-    .storage
-    .from('profile_images')
-    .getPublicUrl(filePath);
-  
-  const publicUrl = data.publicUrl;
-  
-  // Update the pet profile with the new image URL
-  const { error: updateError } = await supabase
-    .from('pet_profiles')
-    .update({
-      profile_image_url: publicUrl,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', profileId);
-  
-  if (updateError) {
-    console.error('Error updating profile with new image:', updateError);
-    return null;
-  }
-  
-  return publicUrl;
 }
 
 /**

@@ -14,6 +14,7 @@ export default function PetProfileForm({ profile, userId, onProfileUpdate, onCan
   const [breed, setBreed] = useState(profile?.breed || '');
   const [age, setAge] = useState(profile?.age?.toString() || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(profile?.profile_image_url || null);
   
@@ -78,12 +79,38 @@ export default function PetProfileForm({ profile, userId, onProfileUpdate, onCan
       
       // Upload profile image if selected
       if (selectedImage && updatedProfile) {
-        const imageUrl = await setPetProfileImage(userId, updatedProfile.id, selectedImage);
-        if (imageUrl) {
-          updatedProfile.profile_image_url = imageUrl;
+        try {
+          setIsImageUploading(true);
+          console.log('Uploading profile image...');
+          const imageUrl = await setPetProfileImage(userId, updatedProfile.id, selectedImage);
+          
+          if (imageUrl) {
+            console.log('Image upload successful:', imageUrl);
+            // Update the local profile object with the image URL
+            updatedProfile.profile_image_url = imageUrl;
+            
+            // Ensure the profile in the database is updated with the image URL
+            const updateResult = await updatePetProfile(updatedProfile.id, {
+              profile_image_url: imageUrl
+            });
+            
+            if (updateResult) {
+              // Use the fully updated profile with image URL
+              updatedProfile = updateResult;
+            }
+          } else {
+            console.error('Image upload returned null URL');
+            setError('Profile saved but image upload failed. Please try again.');
+          }
+        } catch (imageError) {
+          console.error('Error uploading profile image:', imageError);
+          setError('Profile saved but image upload failed. Please try again.');
+        } finally {
+          setIsImageUploading(false);
         }
       }
       
+      // Pass the updated profile back to the parent component
       onProfileUpdate(updatedProfile);
     } catch (err) {
       setError('An error occurred while saving the profile');
@@ -107,16 +134,32 @@ export default function PetProfileForm({ profile, userId, onProfileUpdate, onCan
           onClick={handleImageClick}
         >
           {imagePreview ? (
-            <img 
-              src={imagePreview} 
-              alt="Pet profile" 
-              className="h-full w-full object-cover"
-            />
+            <>
+              <img 
+                src={imagePreview} 
+                alt="Pet profile" 
+                className="h-full w-full object-cover"
+              />
+              {isImageUploading && (
+                <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="text-white text-5xl">🐾</div>
+            <>
+              <div className="text-white text-5xl">🐾</div>
+              {isImageUploading && (
+                <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+                </div>
+              )}
+            </>
           )}
           <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-            <span className="text-white text-sm font-medium">Change Photo</span>
+            <span className="text-white text-sm font-medium">
+              {isImageUploading ? 'Uploading...' : 'Change Photo'}
+            </span>
           </div>
         </div>
         <input
@@ -125,7 +168,13 @@ export default function PetProfileForm({ profile, userId, onProfileUpdate, onCan
           className="hidden"
           ref={fileInputRef}
           onChange={handleImageChange}
+          disabled={isSubmitting || isImageUploading}
         />
+        {selectedImage && !imagePreview && (
+          <p className="text-xs text-pet-gray mt-1">
+            New image selected: {selectedImage.name}
+          </p>
+        )}
       </div>
       
       <div>
@@ -205,10 +254,10 @@ export default function PetProfileForm({ profile, userId, onProfileUpdate, onCan
         )}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isImageUploading}
           className="paw-button inline-flex rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
         >
-          {isSubmitting ? 'Saving...' : profile ? 'Update Profile' : 'Create Profile'}
+          {isSubmitting ? 'Saving...' : (isImageUploading ? 'Uploading Image...' : (profile ? 'Update Profile' : 'Create Profile'))}
         </button>
       </div>
     </form>
