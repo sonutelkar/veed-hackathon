@@ -15,6 +15,7 @@ interface VideoFile {
   url: string;
   createdAt: string;
   size: number;
+  type: string;
 }
 
 // Interface for Supabase storage file
@@ -64,11 +65,12 @@ export default function Videos() {
           return;
         }
         
-        // Filter for video files only
-        const videoFiles = data
-          .filter((file: StorageFile) => file.name.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv)$/i))
+        // Filter for video and image files only
+        const mediaFiles = data
+          .filter((file: StorageFile) => 
+            file.name.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv|jpg|jpeg|png|gif)$/i))
           .map((file: StorageFile) => {
-            // Get public URL for each video
+            // Get public URL for each media file
             const url = supabase.storage.from('videos').getPublicUrl(`${user.id}/${file.name}`).data.publicUrl;
             
             return {
@@ -76,11 +78,12 @@ export default function Videos() {
               name: formatDate(file.created_at),
               url: url,
               createdAt: file.created_at,
-              size: file.metadata?.size || 0
+              size: file.metadata?.size || 0,
+              type: file.name.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv)$/i) ? 'video' : 'image' // Determine type
             };
           });
         
-        setVideos(videoFiles);
+        setVideos(mediaFiles);
       } catch (err) {
         console.error('Unexpected error fetching videos:', err);
       } finally {
@@ -205,30 +208,38 @@ export default function Videos() {
           </div>
         ) : videos.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {videos.map((video) => (
-              <div key={video.id} className="pet-card bg-white overflow-hidden relative">
+            {videos.map((media) => (
+              <div key={media.id} className="pet-card bg-white overflow-hidden relative">
                 <div className="absolute -right-4 -top-4 rotate-12 text-2xl z-10">🐾</div>
                 <div className="relative">
-                  <video
-                    className="h-48 w-full object-cover"
-                    controls
-                    preload="metadata"
-                  >
-                    <source src={video.url} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
+                  {media.type === 'video' ? (
+                    <video
+                      className="h-48 w-full object-cover"
+                      controls
+                      preload="metadata"
+                    >
+                      <source src={media.url} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <img
+                      src={media.url}
+                      alt={media.name}
+                      className="h-48 w-full object-cover"
+                    />
+                  )}
                 </div>
                 <div className="p-5">
                   <h3 className="text-lg font-bold text-pet-purple">
-                    {video.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}
+                    {media.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ")}
                   </h3>
                   <div className="mt-2 flex items-center justify-between text-sm text-pet-gray">
-                    <span>Created: {formatDate(video.createdAt)}</span>
-                    <span>{formatFileSize(video.size)}</span>
+                    <span>Created: {formatDate(media.createdAt)}</span>
+                    <span>{formatFileSize(media.size)}</span>
                   </div>
                   <div className="mt-4 flex space-x-2">
                     <button 
-                      onClick={() => navigator.clipboard.writeText(video.url)}
+                      onClick={() => navigator.clipboard.writeText(media.url)}
                       className="paw-button inline-flex items-center rounded-full border border-[#E5DAFF] bg-white px-3 py-1.5 text-xs font-medium text-pet-purple shadow-sm hover:bg-[#F5F0FF]"
                     >
                       <svg className="mr-1.5 h-4 w-4 text-pet-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -237,8 +248,8 @@ export default function Videos() {
                       Copy Link
                     </button>
                     <a 
-                      href={video.url} 
-                      download={video.name}
+                      href={media.url} 
+                      download={media.name}
                       className="paw-button inline-flex items-center rounded-full border border-[#E5DAFF] bg-white px-3 py-1.5 text-xs font-medium text-pet-purple shadow-sm hover:bg-[#F5F0FF]"
                     >
                       <svg className="mr-1.5 h-4 w-4 text-pet-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
