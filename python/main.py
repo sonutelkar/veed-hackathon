@@ -4,18 +4,26 @@ import sieve
 from dotenv import load_dotenv
 import asyncio
 import gemini
+import background_removal
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
 
+
 class VideoRequest(BaseModel):
     video_url: str 
     prompt: str
 
+
 class StorylineRequest(BaseModel):
     video_summaries: list[str]
+
+
+class BackgroundRemovalRequest(BaseModel):
+    image_url: str
+
 
 @app.get("/")
 async def read_root():
@@ -62,5 +70,14 @@ async def generate_storyline(storyline_request: StorylineRequest):
 
         return {"storyline": storyline}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/remove-background/")
+async def remove_background(request: BackgroundRemovalRequest):
+    try:
+        result_url = background_removal.remove_background_from_supabase_url(request.image_url)
+        return {"background_removed_url": result_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
