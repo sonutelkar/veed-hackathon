@@ -3,11 +3,26 @@ import requests
 import sieve
 from tempfile import NamedTemporaryFile
 from dotenv import load_dotenv
+import subprocess
 import shutil
 from supabase_utils import upload_to_supabase
 
 # Load environment variables
 load_dotenv()
+
+
+def convert_mov_to_mp4(input_path: str) -> str:
+    output_path = input_path.replace(".mov", ".mp4")
+    print(f"Converting {input_path} to {output_path}")  # Debug
+    subprocess.run([
+        "ffmpeg", "-y",  # overwrite output if exists
+        "-i", input_path,
+        "-vcodec", "libx264",
+        "-acodec", "aac",
+        output_path
+    ], check=True)
+    
+    return output_path
 
 
 def remove_background_from_supabase_url(image_url: str) -> str:
@@ -91,15 +106,16 @@ def remove_background_from_video_url(video_url: str) -> str:
 
         print('Processing video in the background...')
 
-        # Retrieve the result
         for output_object in output.result():
             processed_video_path = output_object.path
-            print(f"Processed video saved at: {processed_video_path}")  # Debug print
+            print(f"Processed video saved at: {processed_video_path}")
 
-            # Upload the processed video to Supabase
-            public_url = upload_to_supabase(processed_video_path, content_type="video/mp4")
-            print(f"Uploaded processed video to Supabase: {public_url}")  # Debug print
+            # Convert if it's .mov
+            if processed_video_path.endswith(".mov"):
+                processed_video_path = convert_mov_to_mp4(processed_video_path)
 
+            public_url = upload_to_supabase(processed_video_path, content_type="video/quicktime")
+            print(f"Uploaded processed video to Supabase: {public_url}")
             return public_url
 
     finally:
@@ -111,9 +127,10 @@ def remove_background_from_video_url(video_url: str) -> str:
 
 if __name__ == "__main__":
     supabase_image_url = "https://vqgovjnvkxtkhuixookb.supabase.co/storage/v1/object/public/videos/b6cfdf23-314c-42a0-865a-fbc6159f6c54/7ae56038-9555-4232-a6c5-136e0d1952fb-image-asset.jpeg"
+    video_url = "https://storage.googleapis.com/sieve-prod-us-central1-public-file-upload-bucket/98282506-acd9-47ae-8ccf-5700a9be2ce3/cddfda50-1800-4cb2-b9af-ec60673d279e-input-input_file.mp4"
 
     try:
-        result_url = remove_background_from_supabase_url(supabase_image_url)
+        result_url = remove_background_from_video_url(video_url)
         print("Final Public URL:", result_url)
     except Exception as e:
         print("Error:", e)

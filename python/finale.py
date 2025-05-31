@@ -1,7 +1,8 @@
 import os
 import uuid
 import requests
-from moviepy.editor import VideoFileClip, CompositeVideoClip
+from moviepy import VideoFileClip, CompositeVideoClip
+from moviepy.video.fx.resize import resize
 from supabase_utils import upload_to_supabase
 
 TEMP_DIR = "temp_videos"
@@ -43,8 +44,7 @@ def overlay_videos_and_upload(background_url: str, overlay_url: str) -> str:
 
     # Resize and position overlay in bottom-right quadrant
     overlay = (
-        VideoFileClip(overlay_path)
-        .resize((overlay_width, overlay_height))
+        resize(VideoFileClip(overlay_path), (overlay_width, overlay_height))
         .set_position((bg_width - overlay_width, bg_height - overlay_height))
         .set_start(0)
         .set_duration(background.duration)
@@ -62,8 +62,8 @@ def overlay_videos_and_upload(background_url: str, overlay_url: str) -> str:
 
 # Example usage:
 if __name__ == "__main__":
-    background_test_url = "https://your-supabase-url/storage/v1/object/public/videos/background.mp4"
-    overlay_test_url = "https://your-supabase-url/storage/v1/object/public/videos/overlay.mp4"
+    background_test_url = "https://vqgovjnvkxtkhuixookb.supabase.co/storage/v1/object/public/videos//HwSK248KWzkjeZEEK3J4Q_output.mp4"
+    overlay_test_url = "https://v3.fal.media/files/kangaroo/b-cdWwBNhxxxlDK7yJHWM_tmp55z3xw9e.mp4"
 
     try:
         result_url = overlay_videos_and_upload(background_test_url, overlay_test_url)
