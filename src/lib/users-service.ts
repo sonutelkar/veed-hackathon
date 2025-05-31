@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabase-admin';
+import { supabaseBrowser } from './supabase-browser';
 import { User } from '@supabase/supabase-js';
 
 // Define the user profile type
@@ -58,9 +59,10 @@ export const createUser = async (user: User) => {
   }
 };
 
-// Get a user by ID
+// Get a user by ID - client-side version
 export const getUserById = async (userId: string) => {
-  const { data, error } = await supabaseAdmin
+  const supabase = supabaseBrowser();
+  const { data, error } = await supabase
     .from('users')
     .select('*')
     .eq('id', userId)
