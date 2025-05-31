@@ -121,15 +121,19 @@ def remove_background_from_video_url(video_url: str) -> str:
         print('Processing video in the background...')
 
         for output_object in output.result():
+            print(output_object, output_object.path)
             processed_video_path = output_object.path
             print(f"Processed video saved at: {processed_video_path}")
+            
+            size_mb = os.path.getsize(processed_video_path) / 1024 / 1024
+            print(f"[DEBUG] Final video file size: {size_mb:.2f} MB")
 
             # Convert if it's .mov
             if processed_video_path.lower().endswith(".mov"):
                 print(f"Video is .mov file format")
                 processed_video_path = convert_mov_to_mp4(processed_video_path)
 
-            print()
+            print(f"Ready to upload...")
             public_url = upload_to_supabase(processed_video_path, content_type="video/mp4")
             print(f"Uploaded processed video to Supabase: {public_url}")
             return public_url
