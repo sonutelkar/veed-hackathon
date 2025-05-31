@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import PetIcon from '@/components/PetIcon';
+import PetLoading from '@/components/PetLoading';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -41,12 +43,17 @@ export default function Login() {
     }
   };
 
+  if (isLoading) {
+    return <PetLoading />;
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-8 rounded-lg border p-6 shadow-md">
+    <div className="flex min-h-screen flex-col items-center justify-center p-6 pet-pattern-bg">
+      <div className="w-full max-w-md space-y-8 pet-card bg-white p-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Log In</h1>
-          <p className="mt-2 text-gray-600">Welcome back! Please sign in to your account</p>
+          <PetIcon size={60} className="mx-auto mb-4" />
+          <h1 className="text-3xl font-bold pet-gradient-text">Welcome Back</h1>
+          <p className="mt-2 text-pet-gray">Sign in to continue your pet adventures</p>
         </div>
 
         {error && (
@@ -56,14 +63,14 @@ export default function Login() {
         )}
 
         {message && (
-          <div className="rounded-md bg-blue-50 p-4 text-sm text-blue-700">
+          <div className="rounded-md bg-[#F0F7FF] p-4 text-sm text-pet-blue">
             {message}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-medium text-pet-gray">
               Email address
             </label>
             <input
@@ -73,13 +80,13 @@ export default function Login() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="pet-input mt-1 block w-full"
               placeholder="Enter your email"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-medium text-pet-gray">
               Password
             </label>
             <input
@@ -89,7 +96,7 @@ export default function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className="pet-input mt-1 block w-full"
               placeholder="Enter your password"
             />
           </div>
@@ -98,16 +105,16 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+              className="paw-button flex w-full justify-center rounded-full bg-pet-purple px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
             >
               {isLoading ? 'Logging in...' : 'Log In'}
             </button>
           </div>
         </form>
 
-        <div className="mt-4 text-center text-sm">
+        <div className="mt-4 text-center text-sm text-pet-gray">
           Don't have an account?{' '}
-          <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/signup" className="font-medium text-pet-purple hover:underline">
             Sign up
           </Link>
         </div>
