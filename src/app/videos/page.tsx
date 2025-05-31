@@ -218,7 +218,7 @@ export default function Videos() {
                   <div className="flex justify-center md:justify-start space-x-2">
                     <button
                       onClick={() => setShowEditProfile(true)}
-                      className="paw-button inline-flex items-center rounded-full bg-pet-purple px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-pet-purple-light"
+                      className="paw-button inline-flex items-center rounded-full bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-pet-purple-light"
                     >
                       {petProfile ? 'Edit Profile' : 'Create Profile'}
                     </button>
