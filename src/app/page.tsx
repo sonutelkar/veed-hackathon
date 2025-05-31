@@ -12,8 +12,10 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && user) {
-      router.push('/dashboard');
+    if (!isLoading) {
+      if (user) {
+        router.push('/dashboard');
+      }
     }
   }, [user, isLoading, router]);
 
