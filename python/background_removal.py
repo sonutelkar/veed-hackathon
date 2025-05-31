@@ -23,7 +23,7 @@ def remove_background_from_supabase_url(image_url: str) -> str:
     try:
         bgr_fn = sieve.function.get("sieve/background-removal")
         input_image = sieve.File(path=input_path)
-        output_file = next(bgr_fn.run(input_file=input_image))
+        output_file = next(bgr_fn.run(input_file=input_image, background_color_rgb= "-1"))
 
         # Copy Sieve's output to a properly named .png temp file
         with NamedTemporaryFile(delete=False, suffix=".png") as final_output:
