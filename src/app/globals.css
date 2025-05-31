@@ -3,6 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --pet-purple: #8a4fff;
+  --pet-purple-light: #b69eff;
+  --pet-yellow: #ffc045;
+  --pet-teal: #3ccac8;
+  --pet-pink: #ff6b98;
+  --pet-blue: #4f8eff;
+  --pet-green: #4acf7f;
+  --pet-bg: #f8f9ff;
+  --pet-gray: #667085;
 }
 
 @theme inline {
@@ -23,4 +32,148 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.pet-pattern-bg {
+  background-color: var(--pet-bg);
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238a4fff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.paw-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.paw-button::before {
+  content: "🐾";
+  position: absolute;
+  top: 50%;
+  left: -20px;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.paw-button:hover::before {
+  left: 10px;
+  opacity: 1;
+}
+
+.paw-button:hover {
+  padding-left: 40px;
+}
+
+.pet-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(138, 79, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pet-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(138, 79, 255, 0.15);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.pet-bounce {
+  animation: bounce 2s ease infinite;
+}
+
+.pet-gradient-text {
+  background: linear-gradient(90deg, var(--pet-purple) 0%, var(--pet-pink) 50%, var(--pet-teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.pet-input {
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  padding: 10px 16px;
+  transition: all 0.3s ease;
+}
+
+.pet-input:focus {
+  border-color: var(--pet-purple);
+  box-shadow: 0 0 0 3px rgba(138, 79, 255, 0.2);
+}
+
+.paw-tabs button {
+  position: relative;
+}
+
+.paw-tabs button::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--pet-purple);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.paw-tabs button.active::after,
+.paw-tabs button:hover::after {
+  transform: scaleX(1);
+}
+
+.paw-tabs button.active {
+  color: var(--pet-purple);
+}
+
+/* Loading paw prints animation */
+.paw-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.paw-loading span {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 5px;
+  background-color: var(--pet-purple);
+  border-radius: 50%;
+  opacity: 0.2;
+  animation: paw-loading 1.4s ease-in-out infinite;
+}
+
+.paw-loading span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.paw-loading span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.paw-loading span:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+.paw-loading span:nth-child(5) {
+  animation-delay: 0.8s;
+}
+
+@keyframes paw-loading {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
 }
