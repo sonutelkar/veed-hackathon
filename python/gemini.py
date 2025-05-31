@@ -1,4 +1,4 @@
-import google.generativeai as genai # This import remains the same for backward compatibility
+from google import genai
 import os
 
 def create_pet_storyline(video_summaries):
