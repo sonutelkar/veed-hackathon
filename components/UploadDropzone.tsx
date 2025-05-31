@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr'; // ✅ new helper (replaces auth‑helpers)
-import { useStore } from '@/lib/store';
+// import { useStore } from '@/lib/store';
 
 // Initialise once per module – keeps single supabase instance in the browser
 const supabase = createBrowserClient(
@@ -12,7 +12,7 @@ const supabase = createBrowserClient(
 export default function UploadDropzone() {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  const setVideo = useStore(s => s.setVideo);
+  // const setVideo = useStore(s => s.setVideo);
 
   async function handleSubmit() {
     if (!files.length) return;
@@ -45,7 +45,7 @@ export default function UploadDropzone() {
       body: JSON.stringify({ paths, templateKey: 'spaceCat' }),
     }).then(r => r.json());
 
-    setVideo(res.video);
+    // setVideo(res.video);
     setLoading(false);
   }
 
