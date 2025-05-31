@@ -7,6 +7,7 @@ import fal_client
 from fal_kling_generator import generate_kling_video
 import background_removal
 from elevenlabs.client import ElevenLabs
+from fastapi.middleware.cors import CORSMiddleware
 
 from dotenv import load_dotenv
 
@@ -14,6 +15,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 class SceneRequest(BaseModel):
     prompt: str
