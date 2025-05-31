@@ -65,7 +65,7 @@ def create_pet_script(video_summaries, scenes):
             f"{combined_summaries}"
             "Here are the scenes:\n"
             f"{scenes}"
-            "Now, only give me the script for narration per scene:"
+            "Now, only give me the script for narration per scene (each scene must only be 10 words):"
         )
 
         # Generate the storyline using the model instance from the client
