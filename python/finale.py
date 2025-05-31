@@ -56,7 +56,7 @@ def overlay_videos_and_upload(background_url: str, overlay_url: str) -> str:
     return public_url
 
 
-# Testing
+# Example usage:
 if __name__ == "__main__":
     background_test_url = "https://your-supabase-url/storage/v1/object/public/videos/background.mp4"
     overlay_test_url = "https://your-supabase-url/storage/v1/object/public/videos/overlay.mp4"
