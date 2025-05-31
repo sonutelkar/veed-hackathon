@@ -9,6 +9,7 @@ from supabase_utils import upload_to_supabase
 # Load environment variables
 load_dotenv()
 
+
 def remove_background_from_supabase_url(image_url: str) -> str:
     print(f"Removing background from image URL: {image_url}")  # Debug print
     response = requests.get(image_url)
