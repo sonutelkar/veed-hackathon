@@ -46,7 +46,7 @@ async def read_root():
 async def generate_storyline(scene_request: SceneRequest):
 
     try:
-        scenes = gemini.create_pet_storyline(scene_request.prompt)
+        scenes = gemini.create_pet_scenes(scene_request.prompt)
 
         return {"scenes": scenes}
 
