@@ -22,7 +22,7 @@ def tts_from_script(script):
             voice_id="sIsyDvq54C8vCgtvpJac",
             model_id="eleven_multilingual_v2",
             output_format="mp3_44100_128",
-            voice_settings= {"speed": 1.2}
+            voice_settings= {"speed": 1.05}
         )
 
         # Write the streamed chunks into a temp .mp3 file
