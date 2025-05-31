@@ -112,7 +112,7 @@ export default function Profile() {
           
           <div className="mb-8">
             <div className="flex items-center">
-              <div className="h-24 w-24 rounded-full bg-pet-purple flex items-center justify-center text-3xl font-bold uppercase text-white">
+              <div className="h-24 w-24 rounded-full bg-black flex items-center justify-center text-3xl font-bold uppercase text-white">
                 {profile?.full_name?.[0] || user.email?.[0] || 'P'}
               </div>
               <div className="ml-6">
@@ -159,7 +159,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={isUpdating}
-                className="paw-button inline-flex rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+                className="paw-button inline-flex rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
               >
                 {isUpdating ? 'Updating...' : 'Update Profile'}
               </button>

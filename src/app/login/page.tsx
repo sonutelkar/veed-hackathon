@@ -1,28 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import PetIcon from '@/components/PetIcon';
 import PetLoading from '@/components/PetLoading';
 
-export default function Login() {
+// Component to handle search params separately within Suspense
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { signIn, user } = useAuth();
+  
+  // Import useSearchParams inside this component
+  const { useSearchParams } = require('next/navigation');
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (user) {
       router.push('/dashboard');
     }
     
-    const message = searchParams.get('message');
+    const message = searchParams?.get('message');
     if (message) {
       setMessage(message);
     }
@@ -120,5 +124,13 @@ export default function Login() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 } 
