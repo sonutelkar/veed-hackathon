@@ -189,7 +189,7 @@ export default function Generate() {
           </div>
           <Link
             href="/videos"
-            className="paw-button inline-flex items-center rounded-full bg-white border border-pet-purple px-6 py-3 text-sm font-medium text-pet-purple shadow-lg hover:bg-[#F5F0FF] transition-all"
+            className="paw-button inline-flex items-center rounded-full bg-white border border-black px-6 py-3 text-sm font-medium text-pet-purple shadow-lg hover:bg-[#F5F0FF] transition-all"
           >
             Back to Memories
           </Link>
@@ -234,7 +234,7 @@ export default function Generate() {
               className={`paw-button mt-4 sm:mt-0 inline-flex items-center rounded-full px-6 py-3 text-sm font-medium text-white shadow-lg transition-all
                 ${!selectedImage || !prompt.trim() || isGenerating
                   ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-pet-purple hover:bg-pet-purple-light'
+                  : 'bg-black hover:bg-pet-purple-light'
                 }`}
             >
               {isGenerating ? (
