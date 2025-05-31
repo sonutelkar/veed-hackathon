@@ -5,15 +5,18 @@ import { useSupabase } from '@/lib/supabase-store';
 
 export default function UploadDropzone() {
   const [files, setFiles] = useState<File[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const router = useRouter();
   
-  // Use the centralized Supabase store instead of local state
-  const { supabase, user, session, loading: authLoading } = useSupabase();
+  // Use the centralized Supabase store
+  const { supabase, user, session, loading: authLoading, error: authError } = useSupabase();
 
   async function handleSubmit() {
     if (!files.length || !user) return;
-    setLoading(true);
+    
+    setUploading(true);
+    setUploadError(null);
 
     try {
       /* Upload each file to the `videos` bucket under user's UID folder */
@@ -33,8 +36,8 @@ export default function UploadDropzone() {
         
         if (error) {
           console.error('Upload error:', error);
-          alert(`Upload failed: ${error.message}`);
-          setLoading(false);
+          setUploadError(`Upload failed: ${error.message}`);
+          setUploading(false);
           return;
         }
         
@@ -46,31 +49,23 @@ export default function UploadDropzone() {
         paths.push(path);
       }
 
-      /* 🐱 2 — Kick off the backend pipeline */
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(session?.access_token && { 'Authorization': `Bearer ${session.access_token}` })
-        },
-        body: JSON.stringify({ 
-          paths, 
-          templateKey: 'spaceCat',
-          userId: user.id
-        }),
-      }).then(r => r.json());
-
-      // setVideo(res.video);
-      setLoading(false);
+      setUploading(false);
       
       // Redirect to videos page after successful upload
       router.push('/videos');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Unexpected error:', err);
-      alert('An unexpected error occurred during upload');
-      setLoading(false);
+      setUploadError(err.message || 'An unexpected error occurred during upload');
+      setUploading(false);
     }
   }
+
+  // Show auth errors if they happen
+  useEffect(() => {
+    if (authError) {
+      console.error('Auth error:', authError);
+    }
+  }, [authError]);
 
   return (
     <section className="w-full max-w-md border-dashed border-2 p-6 rounded-xl">
@@ -79,17 +74,27 @@ export default function UploadDropzone() {
         accept="image/*,video/*"
         multiple
         className="w-full"
-        onChange={e => setFiles(Array.from(e.target.files || []))}
+        onChange={e => {
+          setFiles(Array.from(e.target.files || []));
+          setUploadError(null); // Clear errors when new files selected
+        }}
       />
       <button
         onClick={handleSubmit}
-        disabled={!files.length || loading || !user || authLoading}
+        disabled={!files.length || uploading || !user || authLoading}
         className="mt-4 w-full rounded bg-black py-2 text-white disabled:opacity-50"
       >
-        {loading ? 'Processing…' : 'Generate Adventure'}
+        {uploading ? 'Processing…' : 'Generate Adventure'}
       </button>
+      
+      {/* Authentication status messages */}
       {!user && !authLoading && <p className="mt-2 text-sm text-red-500">Please login to upload files</p>}
       {authLoading && <p className="mt-2 text-sm">Checking authentication status...</p>}
+      {authError && <p className="mt-2 text-sm text-red-500">Authentication error: {authError.message}</p>}
+      
+      {/* Upload error message */}
+      {uploadError && <p className="mt-2 text-sm text-red-500">{uploadError}</p>}
     </section>
   );
 }
+

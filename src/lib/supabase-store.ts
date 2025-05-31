@@ -1,6 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { SupabaseClient, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { create } from 'zustand';
+import { useEffect, useState } from 'react';
 
 // Define the store state type
 interface SupabaseState {
@@ -36,6 +37,9 @@ export const useSupabaseStore = create<SupabaseState>((set, get) => ({
   // Initialize the store with session data
   initialize: async () => {
     try {
+      // If already initialized, don't reinitialize
+      if (get().initialized) return;
+      
       set({ loading: true, error: null });
       const supabase = get().supabase;
 
@@ -66,7 +70,7 @@ export const useSupabaseStore = create<SupabaseState>((set, get) => ({
       // Note: We don't return the cleanup function here as it would change the return type
       // In a real app, you might want to handle this in a useEffect in a component
     } catch (error: any) {
-      set({ error, loading: false });
+      set({ error, loading: false, initialized: true }); // Mark as initialized even on error
       console.error('Supabase initialization error:', error);
     }
   },
@@ -84,13 +88,20 @@ export const useSupabaseStore = create<SupabaseState>((set, get) => ({
   }
 }));
 
-// Helper hook to ensure the store is initialized
+// Helper hook to ensure the store is initialized properly with React lifecycle
 export function useSupabase() {
   const store = useSupabaseStore();
+  const [isInitializing, setIsInitializing] = useState(false);
   
-  if (!store.initialized && typeof window !== 'undefined') {
-    store.initialize();
-  }
+  useEffect(() => {
+    // Only initialize once and only on the client side
+    if (!store.initialized && !isInitializing && typeof window !== 'undefined') {
+      setIsInitializing(true);
+      store.initialize().finally(() => {
+        setIsInitializing(false);
+      });
+    }
+  }, [store, isInitializing]);
   
   return store;
 } 
