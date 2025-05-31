@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import sieve
 from dotenv import load_dotenv
 import asyncio
+import gemini
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,9 +14,13 @@ class VideoRequest(BaseModel):
     video_url: str 
     prompt: str
 
+class StorylineRequest(BaseModel):
+    video_summaries: list[str]
+
 @app.get("/")
 async def read_root():
     return {"message": "Hello, World!"}
+
 
 @app.post("/summary-of-videos/")
 async def summary_of_videos(video_request: VideoRequest):
@@ -48,3 +53,14 @@ async def summary_of_videos(video_request: VideoRequest):
         raise HTTPException(status_code=500, detail=str(e))
     
 
+@app.post("/generate-storyline/")
+async def generate_storyline(storyline_request: StorylineRequest):
+
+    try:
+        video_summaries = storyline_request.video_summaries
+        storyline = gemini.create_pet_storyline(video_summaries)
+
+        return {"storyline": storyline}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,10 +1,14 @@
 from google import genai
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 def create_pet_storyline(video_summaries):
     try:
-        client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
-        model = client.models.GenerativeModel("gemini-2.0-flash")
+        model = "gemini-2.0-flash"
+        client = genai.Client(api_key=GOOGLE_API_KEY)
 
         # Combine the summaries into a single prompt for the model
         combined_summaries = "\n".join([f"- {summary}" for summary in video_summaries])
@@ -17,7 +21,9 @@ def create_pet_storyline(video_summaries):
         )
 
         # Generate the storyline using the model instance from the client
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model=model, contents=prompt
+        )
 
         return response.text
 
