@@ -1,25 +1,42 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import sieve
-from dotenv import load_dotenv
 import asyncio
+import sieve
 import gemini
+
+from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
 
-class VideoRequest(BaseModel):
-    video_url: str 
+class SceneRequest(BaseModel):
     prompt: str
 
-class StorylineRequest(BaseModel):
+class VideoRequest(BaseModel):
+    video_url: str
+    prompt: str
+
+class ScriptRequest(BaseModel):
     video_summaries: list[str]
+    scenes: dict[str, str]
 
 @app.get("/")
 async def read_root():
     return {"message": "Hello, World!"}
+
+
+@app.post("/generate-scenes/")
+async def generate_storyline(scene_request: SceneRequest):
+
+    try:
+        scenes = gemini.create_pet_storyline(scene_request.prompt)
+
+        return {"scenes": scenes}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/summary-of-videos/")
@@ -53,14 +70,15 @@ async def summary_of_videos(video_request: VideoRequest):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@app.post("/generate-storyline/")
-async def generate_storyline(storyline_request: StorylineRequest):
+@app.post("/generate-script/")
+async def generate_storyline(scene_request: ScriptRequest):
 
     try:
-        video_summaries = storyline_request.video_summaries
-        storyline = gemini.create_pet_storyline(video_summaries)
+        video_summaries = scene_request.video_summaries
+        scenes = scene_request.scenes
+        script = gemini.create_pet_script(video_summaries, scenes)
 
-        return {"storyline": storyline}
+        return {"script": script}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

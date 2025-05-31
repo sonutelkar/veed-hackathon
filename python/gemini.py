@@ -1,50 +1,100 @@
 from google import genai
 import os
-
 from dotenv import load_dotenv
-load_dotenv()
+from pydantic import BaseModel
 
+# Load environment variables
+load_dotenv()
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-def create_pet_storyline(video_summaries):
+
+# Define the response schema using Pydantic
+class PetStoryline(BaseModel):
+    scene1: str
+    scene2: str
+    scene3: str
+    scene4: str
+
+# Initialize the Gemini client
+client = genai.Client(api_key=GOOGLE_API_KEY)
+
+def create_pet_scenes(user_prompt: str):
+    try:
+        # Define the prompt
+        prompt = (
+            "You are a master storyteller. I have a user prompt that a user wants to integrate into scenes of the story. "
+            "Use the user prompt to create an adventure storyline in four scenes. "
+            "Turn this storyline into a cohesive and engaging narrative about the pet's adventures. "
+            "Don't use names, limit each scene to 10 words."
+            "Don't use more than one adjective in each scene."
+            "Make the scenes suited for a text to video model prompts which can use and generate videos."
+            "Here is the user prompt:\n"
+            f"{user_prompt}\n"
+            "Now, provide the storyline divided into four scenes."
+        )
+
+        # Generate the storyline using the model instance from the client
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": PetStoryline
+            }
+        )
+
+        # Access the structured response
+        return response.parsed
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+def create_pet_script(video_summaries, scenes):
     try:
         model = "gemini-2.0-flash"
         client = genai.Client(api_key=GOOGLE_API_KEY)
 
         # Combine the summaries into a single prompt for the model
         combined_summaries = "\n".join([f"- {summary}" for summary in video_summaries])
+        # combined_scenes = "\n".join([f"Scene {scenes.index(scene) + 1}: {scene}" for scene in scenes])
         prompt = (
-            "You are a master storyteller. I have a series of video summaries about a person's pet. "
-            "Turn these summaries into a cohesive and engaging storyline about the pet's adventures or daily life. "
+            "You are a master script writer for narration. I have a series of video summaries and scene descriptions about a person's pet. "
+            "Turn these summaries into a cohesive and engaging storyline about the pet's adventures. "
             "Here are the video summaries:\n"
             f"{combined_summaries}"
-            "Now, give me the storyline:"
+            "Here are the scenes:\n"
+            f"{scenes}"
+            "Now, only give me the script for narration per scene:"
         )
 
         # Generate the storyline using the model instance from the client
+
         response = client.models.generate_content(
-            model=model, contents=prompt
+            model="gemini-2.0-flash",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": PetStoryline
+            }
         )
 
-        return response.text
+        # Access the structured response
+        return response.parsed
 
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
 
+
 if __name__ == "__main__":
     # Example usage:
-    pet_video_summaries = [
-        "Fluffy the cat chases a laser pointer all over the living room, showing off impressive acrobatics.",
-        "Fluffy discovers a new favorite napping spot in a sunbeam on the kitchen floor.",
-        "Fluffy attempts to 'help' with laundry, batting at socks and getting tangled in a towel.",
-        "Fluffy stares intently at a bird outside the window, chattering softly.",
-        "Fluffy enjoys a vigorous scratching session on her favorite scratching post, then grooms herself meticulously."
-    ]
+    user_prompt = "Story where the cat saves a dog from a lion and then marries dog after"
 
-    story = create_pet_storyline(pet_video_summaries)
+    story = create_pet_scenes(user_prompt)
 
     if story:
-        print("Pet Storyline:")
+        print("Here are the Scenes:")
         print(story)
     else:
-        print("Could not generate a storyline.")
+        print("Could not generate a scenes")
