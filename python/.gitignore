@@ -1,10 +1,27 @@
-# Python-generated files
+# Python bytecode and caches
 __pycache__/
-*.py[oc]
+*.py[cod]
+*.pyo
+*.pyd
+
+# Packaging
 build/
 dist/
+*.egg-info/
 wheels/
-*.egg-info
 
 # Virtual environments
-.venv
+.venv/
+.env/
+env/
+venv/
+
+# uv and poetry lock files (if you switch tools or use both)
+uv.lock
+poetry.lock
+
+# VSCode settings (optional, common for teams)
+.vscode/
+
+# macOS system files (optional)
+.DS_Store
