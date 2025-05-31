@@ -104,10 +104,18 @@ export default function Videos() {
     return null;
   }
 
-  const filterVideos = (filter: 'all' | 'recent' | 'popular') => {
+  const filterVideos = (filter: 'all' | 'newest' | 'oldest') => {
     setActiveFilter(filter);
-    // In a real app, this would filter videos from the database
-    // For now, we'll just use the fetched data
+    
+    let sortedVideos = [...videos];
+    
+    if (filter === 'newest') {
+      sortedVideos.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (filter === 'oldest') {
+      sortedVideos.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }
+    
+    setVideos(sortedVideos);
   };
 
   const formatDate = (dateString: string) => {
@@ -138,7 +146,7 @@ export default function Videos() {
           </div>
           <Link
             href="/dashboard"
-            className="paw-button inline-flex items-center rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+            className="paw-button inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
           >
             Create New Adventure
           </Link>
@@ -151,36 +159,25 @@ export default function Videos() {
               <div className="flex rounded-full overflow-hidden shadow-sm">
                 <button
                   type="button"
-                  onClick={() => filterVideos('all')}
-                  className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
-                    activeFilter === 'all'
+                  onClick={() => filterVideos('newest')}
+                  className={`relative -ml-px inline-flex items-center px-4 py-2 text-sm font-medium ${
+                    activeFilter === 'newest'
                       ? 'bg-pet-purple text-purple'
                       : 'bg-white text-pet-purple hover:bg-[#F5F0FF]'
                   } border border-[#E5DAFF]`}
                 >
-                  All Memories
+                  Newest First
                 </button>
                 <button
                   type="button"
-                  onClick={() => filterVideos('recent')}
+                  onClick={() => filterVideos('oldest')}
                   className={`relative -ml-px inline-flex items-center px-4 py-2 text-sm font-medium ${
-                    activeFilter === 'recent'
+                    activeFilter === 'oldest'
                       ? 'bg-pet-purple text-purple'
                       : 'bg-white text-pet-purple hover:bg-[#F5F0FF]'
                   } border border-[#E5DAFF]`}
                 >
-                  Recent
-                </button>
-                <button
-                  type="button"
-                  onClick={() => filterVideos('popular')}
-                  className={`relative -ml-px inline-flex items-center px-4 py-2 text-sm font-medium ${
-                    activeFilter === 'popular'
-                      ? 'bg-pet-purple text-purple'
-                      : 'bg-white text-pet-purple hover:bg-[#F5F0FF]'
-                  } border border-[#E5DAFF]`}
-                >
-                  Popular
+                  Oldest First
                 </button>
               </div>
             </div>
