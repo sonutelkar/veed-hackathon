@@ -112,7 +112,7 @@ export default function Profile() {
           
           <div className="mb-8">
             <div className="flex items-center">
-              <div className="h-24 w-24 rounded-full bg-pet-purple flex items-center justify-center text-3xl font-bold uppercase text-white">
+              <div className="h-24 w-24 rounded-full bg-black flex items-center justify-center text-3xl font-bold uppercase text-white">
                 {profile?.full_name?.[0] || user.email?.[0] || 'P'}
               </div>
               <div className="ml-6">
