@@ -237,7 +237,7 @@ async def lip_sync(request: VideoAudioRequest):
 @app.post("/stitch-scenes/")
 async def stitch_scenes(request: SceneStitchRequest):
     try:
-        result = await generate_ffmpeg_comp(request.SceneStitchRequest)
+        result = await generate_ffmpeg_comp(request.scenes)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

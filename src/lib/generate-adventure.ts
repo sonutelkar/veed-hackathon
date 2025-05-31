@@ -7,6 +7,9 @@ interface GenerateResponse {
   scenes: string[];
   backgroundRemovedUrl?: string;
   videoResults?: any[];
+  stitchedVideo?: any;
+  videoSummaries?: string[];
+  script?: string;
   // Add other response fields as needed
 }
 
@@ -22,6 +25,14 @@ interface MultiKlingResponse {
     result?: any;
     error?: string;
   }[];
+}
+
+interface VideoSummaryResponse {
+  summary: string;
+}
+
+interface ScriptResponse {
+  script: string;
 }
 
 export async function generateAdventure(
@@ -76,6 +87,7 @@ export async function generateAdventure(
     // Process remove-background response if it was called
     let backgroundRemovedUrl = undefined;
     let videoResults = undefined;
+    let videoSummaries = undefined;
     
     if (removeBackgroundPromise) {
       if (!results[1].ok) {
@@ -105,6 +117,121 @@ export async function generateAdventure(
             if (klingResponse.ok) {
               const klingData: MultiKlingResponse = await klingResponse.json();
               videoResults = klingData.results;
+              
+              // Extract video URLs from the results
+              const videoUrls = klingData.results
+                .filter(result => result.status === "processing" && result.result?.video?.url)
+                .map(result => result.result.video.url);
+              
+              // Call stitch-scenes endpoint if we have videos to stitch
+              if (videoUrls.length > 0) {
+                try {
+                  // First, make the stitch request
+                  const stitchResponse = await fetch(`${API_URL}/stitch-scenes/`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      scenes: videoUrls
+                    }),
+                  });
+                  
+                  // Process stitch response
+                  let stitchData;
+                  if (stitchResponse.ok) {
+                    stitchData = await stitchResponse.json();
+                  } else {
+                    console.error(`Stitch scenes API error: ${stitchResponse.status}`);
+                  }
+                  
+                  // Create summary requests for each video
+                  const summaryPromises = videoUrls.map(videoUrl => 
+                    fetch(`${API_URL}/summary-of-videos/`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        video_url: videoUrl,
+                        prompt: "Summarise the video as if you were a David Attenborough style wildlife presenter"
+                      }),
+                    })
+                  );
+                  
+                  // Wait for all summary requests to complete
+                  const summaryResponses = await Promise.all(summaryPromises);
+                  
+                  // Process all summary responses
+                  const summaryDataPromises = summaryResponses.map(async (response, index) => {
+                    if (response.ok) {
+                      try {
+                        const data: VideoSummaryResponse = await response.json();
+                        return data.summary;
+                      } catch (error) {
+                        console.error(`Error parsing summary response for video ${index}: ${error}`);
+                        return null;
+                      }
+                    } else {
+                      console.error(`Video summary API error for video ${index}: ${response.status}`);
+                      return null;
+                    }
+                  });
+                  
+                  const summaries = await Promise.all(summaryDataPromises);
+                  videoSummaries = summaries.filter(summary => summary !== null) as string[];
+                  
+                  // Generate script using video summaries and scenes
+                  let script: string | undefined = undefined;
+                  
+                  if (videoSummaries.length > 0) {
+                    try {
+                      // Create scenes object with keys in format "scene1", "scene2", etc.
+                      const scenesObj: Record<string, string> = {};
+                      Object.values(scenesData.scenes).forEach((scene, index) => {
+                        scenesObj[`scene${index + 1}`] = scene as string;
+                      });
+                      
+                      const scriptResponse = await fetch(`${API_URL}/generate-script/`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          video_summaries: videoSummaries,
+                          scenes: scenesObj
+                        }),
+                      });
+                      
+                      if (scriptResponse.ok) {
+                        const responseData = await scriptResponse.json();
+                        // Type check the response before assignment
+                        if (responseData && typeof responseData.script === 'string') {
+                          script = responseData.script;
+                        } else {
+                          console.error('Invalid script response format');
+                        }
+                      } else {
+                        console.error(`Generate script API error: ${scriptResponse.status}`);
+                      }
+                    } catch (error) {
+                      console.error('Error generating script:', error);
+                    }
+                  }
+                  
+                  // Return complete response with all data
+                  return {
+                    scenes: scenesData.scenes,
+                    backgroundRemovedUrl,
+                    videoResults,
+                    stitchedVideo: stitchData,
+                    videoSummaries,
+                    script
+                  };
+                } catch (error) {
+                  console.error('Error processing videos:', error);
+                }
+              }
             } else {
               console.error(`Generate multiple kling videos API error: ${klingResponse.status}`);
             }
@@ -119,7 +246,10 @@ export async function generateAdventure(
     return {
       scenes: scenesData.scenes,
       backgroundRemovedUrl,
-      videoResults
+      videoResults,
+      stitchedVideo: undefined,
+      videoSummaries,
+      script: undefined
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
