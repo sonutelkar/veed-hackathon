@@ -9,7 +9,8 @@ interface GenerateResponse {
   videoResults?: any[];
   stitchedVideo?: any;
   videoSummaries?: string[];
-  script?: string;
+  script?: any;
+  audioPath?: string;
   // Add other response fields as needed
 }
 
@@ -32,7 +33,11 @@ interface VideoSummaryResponse {
 }
 
 interface ScriptResponse {
-  script: string;
+  script: Record<string, string>;
+}
+
+interface TTSResponse {
+  audio_path: string;
 }
 
 export async function generateAdventure(
@@ -182,7 +187,8 @@ export async function generateAdventure(
                   videoSummaries = summaries.filter(summary => summary !== null) as string[];
                   
                   // Generate script using video summaries and scenes
-                  let script: string | undefined = undefined;
+                  let script: any = undefined;
+                  let audioPath: string | undefined = undefined;
                   
                   if (videoSummaries.length > 0) {
                     try {
@@ -205,11 +211,35 @@ export async function generateAdventure(
                       
                       if (scriptResponse.ok) {
                         const responseData = await scriptResponse.json();
-                        // Type check the response before assignment
-                        if (responseData && typeof responseData.script === 'string') {
-                          script = responseData.script;
-                        } else {
-                          console.error('Invalid script response format');
+                        // Store the script object
+                        script = responseData.script;
+                        
+                        // Generate text-to-speech from script
+                        if (script) {
+                          try {
+                            // Concatenate all script scenes into a single text
+                            const scriptText = Object.values(script).join(' ');
+                            
+                            // Call TTS endpoint
+                            const ttsResponse = await fetch(`${API_URL}/tts-from-script/`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                text: scriptText
+                              }),
+                            });
+                            
+                            if (ttsResponse.ok) {
+                              const ttsData: TTSResponse = await ttsResponse.json();
+                              audioPath = ttsData.audio_path;
+                            } else {
+                              console.error(`TTS API error: ${ttsResponse.status}`);
+                            }
+                          } catch (error) {
+                            console.error('Error generating TTS:', error);
+                          }
                         }
                       } else {
                         console.error(`Generate script API error: ${scriptResponse.status}`);
@@ -226,7 +256,8 @@ export async function generateAdventure(
                     videoResults,
                     stitchedVideo: stitchData,
                     videoSummaries,
-                    script
+                    script,
+                    audioPath
                   };
                 } catch (error) {
                   console.error('Error processing videos:', error);
@@ -249,7 +280,8 @@ export async function generateAdventure(
       videoResults,
       stitchedVideo: undefined,
       videoSummaries,
-      script: undefined
+      script: undefined,
+      audioPath: undefined
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
