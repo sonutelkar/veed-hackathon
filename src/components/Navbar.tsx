@@ -2,15 +2,37 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import PetIcon from './PetIcon';
+import { getUserById, UserProfile } from '@/lib/users-service';
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [showMenu, setShowMenu] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const profile = await getUserById(user.id);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -18,6 +40,11 @@ export default function Navbar() {
   };
 
   if (!user) return null;
+
+  // Display name logic: use full_name if available, otherwise use email or fallback
+  const displayName = userProfile?.full_name || user.email || 'User';
+  // First letter for avatar
+  const avatarInitial = userProfile?.full_name?.[0] || user.email?.[0] || 'P';
 
   return (
     <nav className="bg-white border-b border-[#F0F0FF] shadow-sm">
@@ -85,9 +112,9 @@ export default function Navbar() {
                   onClick={() => setShowMenu(!showMenu)}
                   className="flex items-center gap-2 cursor-pointer"
                 >
-                  <span className="text-sm text-[#667085] hidden sm:inline">{user.email}</span>
+                  <span className="text-sm text-[#667085] hidden sm:inline">{loading ? 'Loading...' : displayName}</span>
                   <div className="h-8 w-8 rounded-full bg-[#8A4FFF] text-center text-sm font-bold uppercase text-white flex items-center justify-center">
-                    {user.email?.[0] || 'P'}
+                    {avatarInitial}
                   </div>
                 </button>
                 
