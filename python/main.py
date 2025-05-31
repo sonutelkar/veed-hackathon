@@ -6,6 +6,7 @@ import gemini
 import fal_client
 from fal_kling_generator import generate_kling_video
 import background_removal
+from elevenlabs.client import ElevenLabs
 from fastapi.middleware.cors import CORSMiddleware
 
 from dotenv import load_dotenv
@@ -45,6 +46,9 @@ class KlingRequest(BaseModel):
 class MultiKlingRequest(BaseModel):
     prompts: list[str]
     image_url: str
+
+class TTSRequest(BaseModel):
+    text: str
 
 
 @app.get("/")
@@ -183,5 +187,16 @@ async def remove_background(request: BackgroundRemovalRequest):
     try:
         result_url = background_removal.remove_background_from_supabase_url(request.image_url)
         return {"background_removed_url": result_url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/tts-from-script/")
+async def generate_tts_from_script(text: TTSRequest):
+    try:
+
+        audio = generate_tts_script(text.text)
+
+        return {"audio": audio}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
