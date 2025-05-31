@@ -242,74 +242,75 @@ export async function generateAdventure(
                             // Concatenate all script scenes into a single text
                             const scriptText = Object.values(script).join(' ');
                             
-                            // Make concurrent requests for TTS and avatar video
-                            const [ttsResponse, avatarResponse] = await Promise.all([
-                              // Call TTS endpoint
-                              fetch(`${API_URL}/tts-from-script/`, {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                  text: scriptText
-                                }),
+                            // First generate TTS, then use that for the avatar video
+                            const ttsResponse = await fetch(`${API_URL}/tts-from-script/`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                text: scriptText
                               }),
-                              // Call avatar video endpoint
-                              fetch(`${API_URL}/generate-avatar-video/`, {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                  text_script: scriptText
-                                }),
-                              })
-                            ]);
+                            });
                             
                             // Process TTS response
                             let audioPathResult: string | undefined = undefined;
                             if (ttsResponse.ok) {
                               const ttsData: TTSResponse = await ttsResponse.json();
                               audioPathResult = ttsData.audio_path;
-                            } else {
-                              console.error(`TTS API error: ${ttsResponse.status}`);
-                            }
-                            
-                            // Process avatar video response
-                            let avatarVideoResult: any = undefined;
-                            if (avatarResponse.ok) {
-                              avatarVideoResult = await avatarResponse.json();
-                            } else {
-                              console.error(`Avatar video API error: ${avatarResponse.status}`);
-                            }
-                            
-                            // Update variables with the results
-                            audioPath = audioPathResult;
-                            avatarVideo = avatarVideoResult;
-                            
-                            // If we have both audio and avatar video, create lip sync
-                            if (audioPathResult && avatarVideoResult?.video?.url) {
-                              try {
-                                // Call lip sync endpoint
-                                const lipSyncResponse = await fetch(`${API_URL}/lip-sync-video-audio/`, {
+                              
+                              // Only generate avatar video if we have audio
+                              if (audioPathResult) {
+                                // Call avatar video endpoint with the audio URL
+                                const avatarResponse = await fetch(`${API_URL}/generate-avatar-video/`, {
                                   method: 'POST',
                                   headers: {
                                     'Content-Type': 'application/json',
                                   },
                                   body: JSON.stringify({
-                                    video_url: avatarVideoResult.video.url,
                                     audio_url: audioPathResult
                                   }),
                                 });
                                 
-                                if (lipSyncResponse.ok) {
-                                  lipSyncResult = await lipSyncResponse.json();
+                                // Process avatar video response
+                                let avatarVideoResult: any = undefined;
+                                if (avatarResponse.ok) {
+                                  avatarVideoResult = await avatarResponse.json();
+                                  
+                                  // Update variables with the results
+                                  audioPath = audioPathResult;
+                                  avatarVideo = avatarVideoResult;
+                                  
+                                  // If we have both audio and avatar video, create lip sync
+                                  if (audioPathResult && avatarVideoResult?.video?.url) {
+                                    try {
+                                      // Call lip sync endpoint
+                                      const lipSyncResponse = await fetch(`${API_URL}/lip-sync-video-audio/`, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                          video_url: avatarVideoResult.video.url,
+                                          audio_url: audioPathResult
+                                        }),
+                                      });
+                                      
+                                      if (lipSyncResponse.ok) {
+                                        lipSyncResult = await lipSyncResponse.json();
+                                      } else {
+                                        console.error(`Lip sync API error: ${lipSyncResponse.status}`);
+                                      }
+                                    } catch (error) {
+                                      console.error('Error generating lip sync video:', error);
+                                    }
+                                  }
                                 } else {
-                                  console.error(`Lip sync API error: ${lipSyncResponse.status}`);
+                                  console.error(`Avatar video API error: ${avatarResponse.status}`);
                                 }
-                              } catch (error) {
-                                console.error('Error generating lip sync video:', error);
                               }
+                            } else {
+                              console.error(`TTS API error: ${ttsResponse.status}`);
                             }
                           } catch (error) {
                             console.error('Error generating media:', error);

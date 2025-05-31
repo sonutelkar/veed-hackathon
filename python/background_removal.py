@@ -13,14 +13,28 @@ load_dotenv()
 
 def convert_mov_to_mp4(input_path: str) -> str:
     output_path = input_path.replace(".mov", ".mp4")
-    print(f"Converting {input_path} to {output_path}")  # Debug
-    subprocess.run([
-        "ffmpeg", "-y",  # overwrite output if exists
-        "-i", input_path,
-        "-vcodec", "libx264",
-        "-acodec", "aac",
-        output_path
-    ], check=True)
+    print(f"[DEBUG] Starting conversion from MOV to MP4")
+    print(f"[DEBUG] Input path: {input_path}")
+    print(f"[DEBUG] Output path: {output_path}")
+
+    try:
+        result = subprocess.run([
+            "ffmpeg", "-y",  # Overwrite output if it exists
+            "-i", input_path,
+            "-vcodec", "libx264",
+            "-acodec", "aac",
+            output_path
+        ], check=True, capture_output=True, text=True)
+
+        print(f"[DEBUG] ffmpeg stdout:\n{result.stdout}")
+        print(f"[DEBUG] ffmpeg stderr:\n{result.stderr}")
+        print(f"[DEBUG] Conversion successful. Output saved at: {output_path}")
+
+    except subprocess.CalledProcessError as e:
+        print(f"[ERROR] ffmpeg conversion failed with return code {e.returncode}")
+        print(f"[ERROR] ffmpeg stdout:\n{e.stdout}")
+        print(f"[ERROR] ffmpeg stderr:\n{e.stderr}")
+        raise
 
     return output_path
 
@@ -111,23 +125,28 @@ def remove_background_from_video_url(video_url: str) -> str:
             print(f"Processed video saved at: {processed_video_path}")
 
             # Convert if it's .mov
-            if processed_video_path.endswith(".mov"):
+            if processed_video_path.lower().endswith(".mov"):
+                print(f"Video is .mov file format")
                 processed_video_path = convert_mov_to_mp4(processed_video_path)
 
-            public_url = upload_to_supabase(processed_video_path, content_type="video/quicktime")
+            print()
+            public_url = upload_to_supabase(processed_video_path, content_type="video/mp4")
             print(f"Uploaded processed video to Supabase: {public_url}")
             return public_url
+        
+    except Exception as e:
+        print("Error:", e)
 
-    finally:
-        # Clean up temporary files
-        if os.path.exists(input_path):
-            os.remove(input_path)
-            print(f"Removed temporary input file: {input_path}")  # Debug print
+    # finally:
+    #     # Clean up temporary files
+    #     if os.path.exists(input_path):
+    #         os.remove(input_path)
+    #         print(f"Removed temporary input file: {input_path}")  # Debug print
 
 
 if __name__ == "__main__":
     supabase_image_url = "https://vqgovjnvkxtkhuixookb.supabase.co/storage/v1/object/public/videos/b6cfdf23-314c-42a0-865a-fbc6159f6c54/7ae56038-9555-4232-a6c5-136e0d1952fb-image-asset.jpeg"
-    video_url = "https://storage.googleapis.com/sieve-prod-us-central1-public-file-upload-bucket/98282506-acd9-47ae-8ccf-5700a9be2ce3/cddfda50-1800-4cb2-b9af-ec60673d279e-input-input_file.mp4"
+    video_url = "https://v3.fal.media/files/monkey/ZF4I_LbXueILl05SjAKV2_tmpkk6ff5v3.mp4"
 
     try:
         result_url = remove_background_from_video_url(video_url)
