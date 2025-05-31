@@ -9,6 +9,7 @@ import background_removal
 from elevenlabs.client import ElevenLabs
 from fastapi.middleware.cors import CORSMiddleware
 from tts import tts_from_script
+from veed import generate_avatar_video, lip_sync_video_audio
 
 from dotenv import load_dotenv
 
@@ -50,6 +51,13 @@ class MultiKlingRequest(BaseModel):
 
 class TTSRequest(BaseModel):
     text: str
+
+class AvatarRequest(BaseModel):
+    text_script: str
+
+class VideoAudioRequest(BaseModel):
+    video_url: str
+    audio_url: str
 
 
 @app.get("/")
@@ -193,12 +201,30 @@ async def remove_background(request: BackgroundRemovalRequest):
 
 
 @app.post("/tts-from-script/")
-async def generate_tts_from_script(text: TTSRequest):
+async def generate_tts_from_script(request: TTSRequest):
     try:
 
-        audio_path = tts_from_script(text.text)
+        audio_path = tts_from_script(request.text)
 
         return {"audio_path": audio_path}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/generate-avatar-video/")
+async def avatar_video(request: AvatarRequest):
+    try:
+        result = await generate_avatar_video(request.text_script)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/lip-sync-video-audio/")
+async def lip_sync(request: VideoAudioRequest):
+    try:
+        result = await lip_sync_video_audio(request.video_url, request.audio_url)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
