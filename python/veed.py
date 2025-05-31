@@ -27,6 +27,24 @@ async def generate_avatar_video(text_script: str) -> dict:
     return result
 
 
+async def lip_sync_video_audio(video_url: str, audio_url: str) -> dict:
+    handler = await fal_client.submit_async(
+        "veed/lipsync",
+        arguments={
+            "video_url": video_url,
+            "audio_url": audio_url
+        },
+    )
+
+    async for event in handler.iter_events(with_logs=True):
+        print(event)
+
+    result = await handler.get()
+    print(result)
+
+    return result
+
+
 if __name__ == "__main__":
     if sys.platform.startswith("win"):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
