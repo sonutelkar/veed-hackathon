@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import PetLoading from '@/components/PetLoading';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { PetProfile } from '@/lib/pet-profile-service';
+import { getFollowedPets, isFollowingPet } from '@/lib/follow-service';
 
 export default function PetsDirectory() {
   const { user } = useAuth();
@@ -16,6 +17,8 @@ export default function PetsDirectory() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredPets, setFilteredPets] = useState<PetProfile[]>([]);
+  const [followedPetIds, setFollowedPetIds] = useState<string[]>([]);
+  const [petLikes, setPetLikes] = useState<Record<string, number>>({});
 
   useEffect(() => {
     async function fetchAllPets() {
@@ -59,8 +62,44 @@ export default function PetsDirectory() {
     }
   }, [searchQuery, pets]);
 
+  useEffect(() => {
+    async function fetchFollowedPets() {
+      if (!user) return;
+      
+      try {
+        const petIds = await getFollowedPets(user.id);
+        setFollowedPetIds(petIds);
+      } catch (err) {
+        console.error('Error fetching followed pets:', err);
+      }
+    }
+    
+    if (user) {
+      fetchFollowedPets();
+    }
+  }, [user]);
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+
+  const getLikeCount = (petId: string) => {
+    if (petLikes[petId] !== undefined) {
+      return petLikes[petId];
+    }
+    
+    const hash = petId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    const likeCount = Math.abs(hash % 146) + 5;
+    
+    setPetLikes(prev => ({
+      ...prev,
+      [petId]: likeCount
+    }));
+    
+    return likeCount;
   };
 
   return (
@@ -139,12 +178,23 @@ export default function PetsDirectory() {
                         {pet.age ? `${pet.age} years old` : 'Age unknown'}
                       </span>
                       <div className="flex items-center space-x-2">
-                        <button className="flex items-center text-pet-gray text-sm hover:text-black">
-                          <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                          <span>{Math.floor(Math.random() * 100)}</span>
-                        </button>
+                        {followedPetIds.includes(pet.id) ? (
+                          <span className="flex items-center text-black text-sm">
+                            <svg className="h-5 w-5 mr-1 text-black fill-current" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            <span>Following</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center text-pet-gray text-sm">
+                            <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            <span>{getLikeCount(pet.id)}</span>
+                          </span>
+                        )}
                       </div>
                     </div>
                     {pet.bio && (

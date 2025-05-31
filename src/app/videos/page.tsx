@@ -10,6 +10,7 @@ import PetIcon from '@/components/PetIcon';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import { PetProfile, getPetProfileByUserId } from '@/lib/pet-profile-service';
 import PetProfileForm from '@/components/PetProfileForm';
+import { getPetFollowerCount, getFollowedPets } from '@/lib/follow-service';
 
 interface VideoFile {
   id: string;
@@ -45,9 +46,10 @@ export default function Videos() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [stats, setStats] = useState({
     posts: 0,
-    followers: Math.floor(Math.random() * 1000),
-    following: Math.floor(Math.random() * 500)
+    followers: 0,
+    following: 0
   });
+  const [mediaLikes, setMediaLikes] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -127,6 +129,32 @@ export default function Videos() {
     }
   }, [user]);
 
+  useEffect(() => {
+    async function fetchFollowerStats() {
+      if (!user || !petProfile) return;
+      
+      try {
+        // Get followers count for this pet
+        const followerCount = await getPetFollowerCount(petProfile.id);
+        
+        // Get count of pets this user follows
+        const followedPets = await getFollowedPets(user.id);
+        
+        setStats(prev => ({
+          ...prev,
+          followers: followerCount,
+          following: followedPets.length
+        }));
+      } catch (err) {
+        console.error('Error fetching follower stats:', err);
+      }
+    }
+    
+    if (petProfile) {
+      fetchFollowerStats();
+    }
+  }, [user, petProfile]);
+
   const handleProfileUpdate = (updatedProfile: PetProfile) => {
     setPetProfile(updatedProfile);
     setShowEditProfile(false);
@@ -165,6 +193,40 @@ export default function Videos() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Function to get random but stable like count for a media item
+  const getLikeCount = (mediaId: string) => {
+    if (mediaLikes[mediaId] !== undefined) {
+      return mediaLikes[mediaId];
+    }
+    
+    // Create a stable pseudo-random number based on the media ID
+    const hash = mediaId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    // Generate a number between 5 and 150
+    const likeCount = Math.abs(hash % 146) + 5;
+    
+    // Store it for consistency
+    setMediaLikes(prev => ({
+      ...prev,
+      [mediaId]: likeCount
+    }));
+    
+    return likeCount;
+  };
+
+  // Function to get random but stable comment count for a media item
+  const getCommentCount = (mediaId: string) => {
+    // Create a different hash than likes
+    const hash = mediaId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 4) - acc);
+    }, 0);
+    
+    // Generate a number between 0 and 30
+    return Math.abs(hash % 31);
   };
 
   return (
@@ -352,13 +414,13 @@ export default function Videos() {
                       <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
-                      <span>{Math.floor(Math.random() * 100)}</span>
+                      <span>{getLikeCount(media.id)}</span>
                     </div>
                     <div className="flex items-center">
                       <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
-                      <span>{Math.floor(Math.random() * 20)}</span>
+                      <span>{getCommentCount(media.id)}</span>
                     </div>
                   </div>
                 </div>

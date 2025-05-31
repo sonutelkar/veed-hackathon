@@ -8,7 +8,7 @@ import Navbar from '@/components/Navbar';
 import PetLoading from '@/components/PetLoading';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { PetProfile } from '@/lib/pet-profile-service';
-import { followPet, unfollowPet, isFollowingPet, getPetFollowerCount } from '@/lib/follow-service';
+import { followPet, unfollowPet, isFollowingPet, getPetFollowerCount, getFollowedPets } from '@/lib/follow-service';
 
 interface VideoFile {
   id: string;
@@ -32,8 +32,9 @@ export default function PetProfile() {
   const [stats, setStats] = useState({
     posts: 0,
     followers: 0,
-    following: Math.floor(Math.random() * 500)
+    following: 0
   });
+  const [mediaLikes, setMediaLikes] = useState<Record<string, number>>({});
 
   useEffect(() => {
     async function fetchPetProfile() {
@@ -58,16 +59,18 @@ export default function PetProfile() {
         
         // Get real follower count
         const followerCount = await getPetFollowerCount(id as string);
+        
+        // Check if current user is following this pet
+        let followingStatus = false;
+        if (user) {
+          followingStatus = await isFollowingPet(user.id, id as string);
+          setIsFollowing(followingStatus);
+        }
+        
         setStats(prev => ({
           ...prev,
           followers: followerCount
         }));
-        
-        // Check if current user is following this pet
-        if (user) {
-          const following = await isFollowingPet(user.id, id as string);
-          setIsFollowing(following);
-        }
       } catch (err) {
         console.error('Unexpected error fetching pet profile:', err);
       } finally {
@@ -117,7 +120,20 @@ export default function PetProfile() {
           });
         
         setVideos(mediaFiles);
-        setStats(prev => ({ ...prev, posts: mediaFiles.length }));
+        
+        // Update post count
+        setStats(prev => ({ 
+          ...prev, 
+          posts: mediaFiles.length 
+        }));
+        
+        // Also fetch pets that this pet is following
+        const followedPets = await getFollowedPets(pet.user_id);
+        setStats(prev => ({
+          ...prev,
+          following: followedPets.length
+        }));
+        
       } catch (err) {
         console.error('Unexpected error fetching videos:', err);
       } finally {
@@ -169,6 +185,40 @@ export default function PetProfile() {
     } finally {
       setIsFollowLoading(false);
     }
+  };
+
+  // Function to get random but stable like count for a media item
+  const getLikeCount = (mediaId: string) => {
+    if (mediaLikes[mediaId] !== undefined) {
+      return mediaLikes[mediaId];
+    }
+    
+    // Create a stable pseudo-random number based on the media ID
+    const hash = mediaId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    // Generate a number between 5 and 150
+    const likeCount = Math.abs(hash % 146) + 5;
+    
+    // Store it for consistency
+    setMediaLikes(prev => ({
+      ...prev,
+      [mediaId]: likeCount
+    }));
+    
+    return likeCount;
+  };
+
+  // Function to get random but stable comment count for a media item
+  const getCommentCount = (mediaId: string) => {
+    // Create a different hash than likes
+    const hash = mediaId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 4) - acc);
+    }, 0);
+    
+    // Generate a number between 0 and 30
+    return Math.abs(hash % 31);
   };
 
   if (isLoading) {
@@ -332,13 +382,13 @@ export default function PetProfile() {
                         <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
-                        <span>{Math.floor(Math.random() * 100)}</span>
+                        <span>{getLikeCount(media.id)}</span>
                       </div>
                       <div className="flex items-center">
                         <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
-                        <span>{Math.floor(Math.random() * 20)}</span>
+                        <span>{getCommentCount(media.id)}</span>
                       </div>
                     </div>
                   </div>
