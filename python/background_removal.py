@@ -21,7 +21,7 @@ def convert_mov_to_mp4(input_path: str) -> str:
         "-acodec", "aac",
         output_path
     ], check=True)
-    
+
     return output_path
 
 

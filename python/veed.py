@@ -7,12 +7,12 @@ import sys
 load_dotenv()
 
 
-async def generate_avatar_video(text_script: str) -> dict:
+async def generate_avatar_video(audio_url: str) -> dict:
     handler = await fal_client.submit_async(
-        "veed/avatars/text-to-video",
+        "veed/avatars/audio-to-video",
         arguments={
             "avatar_id": "emily_primary",
-            "text": text_script
+            "audio_url": audio_url
         },
     )
 
