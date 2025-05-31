@@ -159,7 +159,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={isUpdating}
-                className="paw-button inline-flex rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+                className="paw-button inline-flex rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
               >
                 {isUpdating ? 'Updating...' : 'Update Profile'}
               </button>
