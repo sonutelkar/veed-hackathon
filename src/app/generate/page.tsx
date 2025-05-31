@@ -42,6 +42,7 @@ export default function Generate() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationResult, setGenerationResult] = useState<string | null>(null);
   const [generatedScenes, setGeneratedScenes] = useState<string[]>([]);
+  const [backgroundRemovedUrl, setBackgroundRemovedUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -128,6 +129,7 @@ export default function Generate() {
     }
 
     setIsGenerating(true);
+    setBackgroundRemovedUrl(null);
     
     try {
       // Call the API to generate adventure
@@ -135,6 +137,11 @@ export default function Generate() {
       
       // Set the generated scenes
       setGeneratedScenes(result.scenes);
+      
+      // Set the background removed image URL if available
+      if (result.backgroundRemovedUrl) {
+        setBackgroundRemovedUrl(result.backgroundRemovedUrl);
+      }
       
       // Set a summary result message
       setGenerationResult(`Generated a pet adventure with ${result.scenes.length} scenes!`);
@@ -251,6 +258,19 @@ export default function Generate() {
               <h3 className="text-xl font-bold text-pet-purple">Generation Result</h3>
             </div>
             <p className="text-pet-gray">{generationResult}</p>
+            
+            {backgroundRemovedUrl && (
+              <div className="mt-6 mb-4">
+                <h4 className="text-lg font-semibold text-pet-purple mb-2">Your Pet (Background Removed)</h4>
+                <div className="flex justify-center bg-[#F9F5FF] p-4 rounded-lg">
+                  <img 
+                    src={backgroundRemovedUrl} 
+                    alt="Pet with background removed" 
+                    className="max-h-64 object-contain rounded-lg shadow-md"
+                  />
+                </div>
+              </div>
+            )}
             
             {generatedScenes.length > 0 && (
               <div className="mt-4">
