@@ -73,7 +73,7 @@ export default function Videos() {
             
             return {
               id: file.id,
-              name: file.name,
+              name: formatDate(file.created_at),
               url: url,
               createdAt: file.created_at,
               size: file.metadata?.size || 0
