@@ -36,6 +36,7 @@ async def lip_sync_video_audio(video_url: str, audio_url: str) -> dict:
         },
     )
 
+    # Optionally print logs
     async for event in handler.iter_events(with_logs=True):
         print(event)
 
