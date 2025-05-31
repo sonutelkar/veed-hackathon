@@ -12,6 +12,7 @@ interface GenerateResponse {
   script?: any;
   audioPath?: string;
   avatarVideo?: any;
+  lipSyncVideo?: any;
   // Add other response fields as needed
 }
 
@@ -42,6 +43,18 @@ interface TTSResponse {
 }
 
 interface AvatarVideoResponse {
+  video_url?: string;
+  status?: string;
+  video?: {
+    url: string;
+    content_type: string;
+    file_name: string;
+    file_size: number;
+  };
+  [key: string]: any;
+}
+
+interface LipSyncResponse {
   video_url?: string;
   status?: string;
   [key: string]: any;
@@ -197,6 +210,7 @@ export async function generateAdventure(
                   let script: any = undefined;
                   let audioPath: string | undefined = undefined;
                   let avatarVideo: any = undefined;
+                  let lipSyncResult: any = undefined;
                   
                   if (videoSummaries.length > 0) {
                     try {
@@ -272,6 +286,31 @@ export async function generateAdventure(
                             // Update variables with the results
                             audioPath = audioPathResult;
                             avatarVideo = avatarVideoResult;
+                            
+                            // If we have both audio and avatar video, create lip sync
+                            if (audioPathResult && avatarVideoResult?.video?.url) {
+                              try {
+                                // Call lip sync endpoint
+                                const lipSyncResponse = await fetch(`${API_URL}/lip-sync-video-audio/`, {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({
+                                    video_url: avatarVideoResult.video.url,
+                                    audio_url: audioPathResult
+                                  }),
+                                });
+                                
+                                if (lipSyncResponse.ok) {
+                                  lipSyncResult = await lipSyncResponse.json();
+                                } else {
+                                  console.error(`Lip sync API error: ${lipSyncResponse.status}`);
+                                }
+                              } catch (error) {
+                                console.error('Error generating lip sync video:', error);
+                              }
+                            }
                           } catch (error) {
                             console.error('Error generating media:', error);
                           }
@@ -293,7 +332,8 @@ export async function generateAdventure(
                     videoSummaries,
                     script,
                     audioPath,
-                    avatarVideo
+                    avatarVideo,
+                    lipSyncVideo: lipSyncResult
                   };
                 } catch (error) {
                   console.error('Error processing videos:', error);
@@ -318,7 +358,8 @@ export async function generateAdventure(
       videoSummaries,
       script: undefined,
       audioPath: undefined,
-      avatarVideo: undefined
+      avatarVideo: undefined,
+      lipSyncVideo: undefined
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
