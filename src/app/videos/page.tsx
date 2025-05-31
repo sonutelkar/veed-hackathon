@@ -145,7 +145,7 @@ export default function Videos() {
             </p>
           </div>
           <Link
-            href="/dashboard"
+            href="/generate"
             className="paw-button inline-flex items-center rounded-full bg-black px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
           >
             Create New Adventure
@@ -266,7 +266,7 @@ export default function Videos() {
             <p className="mt-2 text-pet-gray">Get started by creating your first pet video memory.</p>
             <div className="mt-6">
               <Link
-                href="/dashboard"
+                href="/generate"
                 className="paw-button inline-flex items-center rounded-full bg-pet-purple px-6 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
               >
                 Create First Memory
