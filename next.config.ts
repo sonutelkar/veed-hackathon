@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+const nextConfig : NextConfig = {
+  experimental: { serverActions: true },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.photoroom.com' },
+      { protocol: 'https', hostname: '**.fal.ai' },
+    ],
+  },
 };
-
-export default nextConfig;
+module.exports = nextConfig;
