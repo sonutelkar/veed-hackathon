@@ -5,6 +5,7 @@ requires-python = ">=3.10"
 
 dependencies = [
     "asyncio>=3.4.3",
+    "fal-client>=0.7.0",
     "fastapi>=0.115.12",
     "google-genai>=1.18.0",
     "python-dotenv>=1.1.0",
