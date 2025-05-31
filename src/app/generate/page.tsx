@@ -144,7 +144,7 @@ export default function Generate() {
       }
       
       // Set a summary result message
-      setGenerationResult(`Generated a pet adventure with ${result.scenes.length} scenes!`);
+      setGenerationResult(`Generated a pet adventure with ${result.scenes.length} scenes! Videos will be available in approximately 20 minutes.`);
     } catch (error) {
       console.error('Error generating content:', error);
       setGenerationResult('Error generating content. Please try again.');
@@ -177,6 +177,48 @@ export default function Generate() {
   return (
     <div className="min-h-screen pet-pattern-bg">
       <Navbar />
+
+      {/* Fullscreen Loading Overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center overflow-hidden">
+          <div className="relative w-full max-w-lg">
+            {/* Animated colorful blobs */}
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+            <div className="absolute -bottom-8 right-20 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-3000"></div>
+            
+            {/* Centered content */}
+            <div className="relative flex flex-col items-center justify-center">
+              <div className="flex items-center justify-center mb-8">
+                <div className="h-24 w-24 relative">
+                  {/* Spinning gradient ring */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 animate-spin"></div>
+                  {/* Inner white circle */}
+                  <div className="absolute inset-1 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-4xl">🐾</span>
+                  </div>
+                </div>
+              </div>
+              
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600">
+                Creating Your Pet's Adventure
+              </h2>
+              
+              <p className="text-center text-gray-600 max-w-md mb-6">
+                Our AI is crafting a unique adventure for your pet. This magical process takes a moment...
+              </p>
+              
+              {/* Animated dots */}
+              <div className="flex space-x-2 justify-center items-center">
+                <div className="w-3 h-3 rounded-full bg-purple-600 animate-bounce"></div>
+                <div className="w-3 h-3 rounded-full bg-pink-600 animate-bounce animation-delay-200"></div>
+                <div className="w-3 h-3 rounded-full bg-blue-600 animate-bounce animation-delay-400"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -260,16 +302,28 @@ export default function Generate() {
             <p className="text-pet-gray">{generationResult}</p>
             
             {backgroundRemovedUrl && (
-              <div className="mt-6 mb-4">
-                <h4 className="text-lg font-semibold text-pet-purple mb-2">Your Pet (Background Removed)</h4>
-                <div className="flex justify-center bg-[#F9F5FF] p-4 rounded-lg">
-                  <img 
-                    src={backgroundRemovedUrl} 
-                    alt="Pet with background removed" 
-                    className="max-h-64 object-contain rounded-lg shadow-md"
-                  />
+              <>
+                <div className="mt-6 mb-4">
+                  <h4 className="text-lg font-semibold text-pet-purple mb-2">Your Pet (Background Removed)</h4>
+                  <div className="flex justify-center bg-[#F9F5FF] p-4 rounded-lg">
+                    <img 
+                      src={backgroundRemovedUrl} 
+                      alt="Pet with background removed" 
+                      className="max-h-64 object-contain rounded-lg shadow-md"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center">
+                    <span className="text-xl mr-2">⏳</span>
+                    <h4 className="text-md font-semibold text-yellow-700">Video Generation In Progress</h4>
+                  </div>
+                  <p className="text-sm text-yellow-600 mt-1">
+                    Your pet videos are being generated with AI. This process takes approximately 20 minutes. 
+                    Please check back later in the Videos section to view your completed videos.
+                  </p>
+                </div>
+              </>
             )}
             
             {generatedScenes.length > 0 && (

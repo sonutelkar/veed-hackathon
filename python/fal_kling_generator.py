@@ -7,7 +7,7 @@ async def generate_kling_video(prompt, image_url_1):
             "fal-ai/kling-video/v1.6/standard/elements",
             arguments={
                 "prompt": prompt,
-                "input_image_urls": [image_url_1, image_url_2]
+                "input_image_urls": [image_url_1]
             },
         )
 
