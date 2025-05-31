@@ -4,7 +4,7 @@ import asyncio
 import sieve
 import gemini
 import fal_client
-from fal_kling_generator import generate_kling_video
+from fal import generate_kling_video
 import background_removal
 from elevenlabs.client import ElevenLabs
 from fastapi.middleware.cors import CORSMiddleware
