@@ -10,7 +10,7 @@ from elevenlabs.client import ElevenLabs
 from fastapi.middleware.cors import CORSMiddleware
 from tts import tts_from_script
 from veed import generate_avatar_video, lip_sync_video_audio
-
+from fal_kling_duet import generate_kling_duet
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -61,6 +61,11 @@ class AvatarRequest(BaseModel):
 class VideoAudioRequest(BaseModel):
     video_url: str
     audio_url: str
+
+class KlingDuetRequest(BaseModel):
+    prompt: str
+    image_url_1: str
+    image_url_2: str
 
 
 @app.get("/")
@@ -238,6 +243,14 @@ async def lip_sync(request: VideoAudioRequest):
 async def stitch_scenes(request: SceneStitchRequest):
     try:
         result = await generate_ffmpeg_comp(request.scenes)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate-kling-duet/")
+async def kling_duet(request: KlingDuetRequest):
+    try:
+        result = await generate_kling_duet(request.prompt, request.image_url_1, request.image_url_2)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
