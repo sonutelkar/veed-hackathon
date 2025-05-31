@@ -1,4 +1,3 @@
-import os
 import asyncio
 import fal_client
 from dotenv import load_dotenv

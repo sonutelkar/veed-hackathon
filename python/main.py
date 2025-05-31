@@ -195,8 +195,8 @@ async def remove_background(request: BackgroundRemovalRequest):
 async def generate_tts_from_script(text: TTSRequest):
     try:
 
-        audio = generate_tts_script(text.text)
+        audio_path = generate_tts_script(text.text)
 
-        return {"audio": audio}
+        return {"audio_path": audio_path}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -16,7 +16,15 @@ def upload_to_supabase(file_path: str, content_type: str = "image/png") -> str:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     filename = os.path.basename(file_path)
-    unique_filename = f"{filename}-{uuid.uuid4()}.png"
+
+    # Generate unique filename
+    if content_type == "image/png":
+        unique_filename = f"{filename}-{uuid.uuid4()}.png"
+    elif content_type == "audio/mpeg":
+        unique_filename = f"{filename}-{uuid.uuid4()}.mp3"
+    else:
+        raise Exception(f"Unsupported content type: {content_type}")
+
     storage_path = f"{unique_filename}"
 
     with open(file_path, "rb") as f:
