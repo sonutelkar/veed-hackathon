@@ -7,6 +7,7 @@ interface GenerateResponse {
   scenes: string[];
   backgroundRemovedUrl?: string;
   videoResults?: any[];
+  stitchedVideo?: any;
   // Add other response fields as needed
 }
 
@@ -105,6 +106,41 @@ export async function generateAdventure(
             if (klingResponse.ok) {
               const klingData: MultiKlingResponse = await klingResponse.json();
               videoResults = klingData.results;
+              
+              // Extract video URLs from the results
+              const videoUrls = klingData.results
+                .filter(result => result.status === "processing" && result.result?.video?.url)
+                .map(result => result.result.video.url);
+              
+              // Call stitch-scenes endpoint if we have videos to stitch
+              if (videoUrls.length > 0) {
+                try {
+                  const stitchResponse = await fetch(`${API_URL}/stitch-scenes/`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      scenes: videoUrls
+                    }),
+                  });
+                  
+                  if (stitchResponse.ok) {
+                    const stitchData = await stitchResponse.json();
+                    // Add stitched video URL to the response
+                    return {
+                      scenes: scenesData.scenes,
+                      backgroundRemovedUrl,
+                      videoResults,
+                      stitchedVideo: stitchData
+                    };
+                  } else {
+                    console.error(`Stitch scenes API error: ${stitchResponse.status}`);
+                  }
+                } catch (error) {
+                  console.error('Error stitching videos:', error);
+                }
+              }
             } else {
               console.error(`Generate multiple kling videos API error: ${klingResponse.status}`);
             }
@@ -119,7 +155,8 @@ export async function generateAdventure(
     return {
       scenes: scenesData.scenes,
       backgroundRemovedUrl,
-      videoResults
+      videoResults,
+      stitchedVideo: undefined
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
