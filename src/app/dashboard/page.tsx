@@ -94,9 +94,9 @@ export default function Dashboard() {
         <div className="pet-card bg-white mb-8 relative overflow-hidden">
           <div className="absolute -right-4 -top-4 text-4xl rotate-12">🐾</div>
           <div className="px-6 py-8">
-            <h3 className="text-xl font-bold text-pet-purple mb-2">Create New Adventure</h3>
+            <h3 className="text-xl font-bold text-pet-purple mb-2">Upload your memories</h3>
             <div className="mb-4 text-pet-gray">
-              <p>Upload a photo of your pet and we'll generate an adventure video</p>
+              <p>Upload your memories which you can use to generate your pet adventures</p>
             </div>
             <div className="mt-5">
               <UploadDropzone />
