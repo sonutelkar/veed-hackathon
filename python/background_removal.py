@@ -46,6 +46,68 @@ def remove_background_from_supabase_url(image_url: str) -> str:
             print(f"Removed final output file: {final_output_path}")  # Debug print
 
 
+def remove_background_from_video_url(video_url: str) -> str:
+    print(f"Removing background from video URL: {video_url}")  # Debug print
+    response = requests.get(video_url)
+    response.raise_for_status()
+
+    with NamedTemporaryFile(delete=False, suffix=".mp4") as input_tmp:
+        input_tmp.write(response.content)
+        input_path = input_tmp.name
+        print(f"Temporary input file created: {input_path}")  # Debug print
+
+    try:
+        # Initialize the Sieve background removal function
+        background_removal = sieve.function.get("sieve/background-removal")
+
+        # Prepare the input file for Sieve
+        input_file = sieve.File(path=input_path)
+
+        # Set parameters for background removal
+        backend = "vanish"
+        background_color_rgb = "-1"  # Transparent background
+        background_media = sieve.File(url="")  # Optional: provide a background media URL
+        output_type = "masked_frame"
+        video_output_format = "mp4"
+        yield_output_batches = False
+        start_frame = 0
+        end_frame = -1
+        vanish_allow_scene_splitting = True
+
+        # Run the background removal process
+        output = background_removal.push(
+            input_file,
+            backend,
+            background_color_rgb,
+            background_media,
+            output_type,
+            video_output_format,
+            yield_output_batches,
+            start_frame,
+            end_frame,
+            vanish_allow_scene_splitting
+        )
+
+        print('Processing video in the background...')
+
+        # Retrieve the result
+        for output_object in output.result():
+            processed_video_path = output_object.path
+            print(f"Processed video saved at: {processed_video_path}")  # Debug print
+
+            # Upload the processed video to Supabase
+            public_url = upload_to_supabase(processed_video_path, content_type="video/mp4")
+            print(f"Uploaded processed video to Supabase: {public_url}")  # Debug print
+
+            return public_url
+
+    finally:
+        # Clean up temporary files
+        if os.path.exists(input_path):
+            os.remove(input_path)
+            print(f"Removed temporary input file: {input_path}")  # Debug print
+
+
 if __name__ == "__main__":
     supabase_image_url = "https://vqgovjnvkxtkhuixookb.supabase.co/storage/v1/object/public/videos/b6cfdf23-314c-42a0-865a-fbc6159f6c54/7ae56038-9555-4232-a6c5-136e0d1952fb-image-asset.jpeg"
 

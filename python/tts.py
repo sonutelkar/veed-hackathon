@@ -48,5 +48,5 @@ def tts_from_script(script):
 
 if __name__ == "__main__":
     script = "The quick brown fox jumps over the lazy dog."
-    result_url = generate_tts_from_script(script)
+    result_url = tts_from_script(script)
     print("Final Public URL:", result_url)
