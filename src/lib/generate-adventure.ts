@@ -11,6 +11,7 @@ interface GenerateResponse {
   videoSummaries?: string[];
   script?: any;
   audioPath?: string;
+  avatarVideo?: any;
   // Add other response fields as needed
 }
 
@@ -38,6 +39,12 @@ interface ScriptResponse {
 
 interface TTSResponse {
   audio_path: string;
+}
+
+interface AvatarVideoResponse {
+  video_url?: string;
+  status?: string;
+  [key: string]: any;
 }
 
 export async function generateAdventure(
@@ -189,6 +196,7 @@ export async function generateAdventure(
                   // Generate script using video summaries and scenes
                   let script: any = undefined;
                   let audioPath: string | undefined = undefined;
+                  let avatarVideo: any = undefined;
                   
                   if (videoSummaries.length > 0) {
                     try {
@@ -220,25 +228,52 @@ export async function generateAdventure(
                             // Concatenate all script scenes into a single text
                             const scriptText = Object.values(script).join(' ');
                             
-                            // Call TTS endpoint
-                            const ttsResponse = await fetch(`${API_URL}/tts-from-script/`, {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({
-                                text: scriptText
+                            // Make concurrent requests for TTS and avatar video
+                            const [ttsResponse, avatarResponse] = await Promise.all([
+                              // Call TTS endpoint
+                              fetch(`${API_URL}/tts-from-script/`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  text: scriptText
+                                }),
                               }),
-                            });
+                              // Call avatar video endpoint
+                              fetch(`${API_URL}/generate-avatar-video/`, {
+                                method: 'POST',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  text_script: scriptText
+                                }),
+                              })
+                            ]);
                             
+                            // Process TTS response
+                            let audioPathResult: string | undefined = undefined;
                             if (ttsResponse.ok) {
                               const ttsData: TTSResponse = await ttsResponse.json();
-                              audioPath = ttsData.audio_path;
+                              audioPathResult = ttsData.audio_path;
                             } else {
                               console.error(`TTS API error: ${ttsResponse.status}`);
                             }
+                            
+                            // Process avatar video response
+                            let avatarVideoResult: any = undefined;
+                            if (avatarResponse.ok) {
+                              avatarVideoResult = await avatarResponse.json();
+                            } else {
+                              console.error(`Avatar video API error: ${avatarResponse.status}`);
+                            }
+                            
+                            // Update variables with the results
+                            audioPath = audioPathResult;
+                            avatarVideo = avatarVideoResult;
                           } catch (error) {
-                            console.error('Error generating TTS:', error);
+                            console.error('Error generating media:', error);
                           }
                         }
                       } else {
@@ -257,7 +292,8 @@ export async function generateAdventure(
                     stitchedVideo: stitchData,
                     videoSummaries,
                     script,
-                    audioPath
+                    audioPath,
+                    avatarVideo
                   };
                 } catch (error) {
                   console.error('Error processing videos:', error);
@@ -281,7 +317,8 @@ export async function generateAdventure(
       stitchedVideo: undefined,
       videoSummaries,
       script: undefined,
-      audioPath: undefined
+      audioPath: undefined,
+      avatarVideo: undefined
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
