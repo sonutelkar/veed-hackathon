@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import PetIcon from './PetIcon';
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
@@ -17,45 +18,58 @@ export default function Navbar() {
   if (!user) return null;
 
   return (
-    <nav className="border-b border-gray-200 bg-white">
+    <nav className="bg-white border-b border-[#F0F0FF] shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
+        <div className="flex h-20 justify-between items-center">
+          <div className="flex items-center">
             <div className="flex shrink-0 items-center">
-              <span className="text-xl font-bold text-blue-600">PetVentures</span>
+              <div className="flex items-center">
+                <PetIcon className="mr-2" />
+                <span className="text-xl font-bold pet-gradient-text">PetVentures</span>
+              </div>
             </div>
-            <div className="ml-6 hidden sm:flex sm:space-x-8">
+            <div className="ml-8 paw-tabs hidden sm:flex">
               <Link
                 href="/dashboard"
-                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                className={`mr-6 py-2 font-medium text-[15px] ${
                   pathname === '/dashboard'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    ? 'text-[#8A4FFF] active'
+                    : 'text-[#667085] hover:text-[#8A4FFF]'
                 }`}
               >
-                Dashboard
+                <span className="flex items-center">
+                  <svg className="w-5 h-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                  </svg>
+                  Dashboard
+                </span>
               </Link>
               <Link
                 href="/videos"
-                className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${
+                className={`mr-6 py-2 font-medium text-[15px] ${
                   pathname === '/videos'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    ? 'text-[#8A4FFF] active'
+                    : 'text-[#667085] hover:text-[#8A4FFF]'
                 }`}
               >
-                My Videos
+                <span className="flex items-center">
+                  <svg className="w-5 h-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                  </svg>
+                  My Adventures
+                </span>
               </Link>
             </div>
           </div>
           <div className="flex items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">{user.email}</span>
-              <div className="h-6 w-6 rounded-full bg-blue-500 text-center text-xs font-bold uppercase text-white flex items-center justify-center">
-                {user.email?.[0] || 'U'}
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[#667085]">{user.email}</span>
+              <div className="h-8 w-8 rounded-full bg-[#8A4FFF] text-center text-sm font-bold uppercase text-white flex items-center justify-center">
+                {user.email?.[0] || 'P'}
               </div>
               <button
                 onClick={handleSignOut}
-                className="ml-2 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300"
+                className="ml-2 paw-button rounded-full bg-white px-4 py-2 text-sm font-medium text-[#8A4FFF] hover:bg-[#F5F0FF] border border-[#E5DAFF] transition-all"
               >
                 Sign Out
               </button>
