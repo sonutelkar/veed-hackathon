@@ -85,7 +85,37 @@ export default function Navbar() {
                   <svg className="w-5 h-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
                   </svg>
-                  My Memories
+                  My Profile
+                </span>
+              </Link>
+              <Link
+                href="/pets"
+                className={`mr-6 py-2 font-medium text-[15px] ${
+                  pathname === '/pets' || pathname.startsWith('/pets/')
+                    ? 'text-[#8A4FFF] active'
+                    : 'text-[#667085] hover:text-[#8A4FFF]'
+                }`}
+              >
+                <span className="flex items-center">
+                  <svg className="w-5 h-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                  </svg>
+                  Discover Pets
+                </span>
+              </Link>
+              <Link
+                href="/pets/following"
+                className={`mr-6 py-2 font-medium text-[15px] ${
+                  pathname === '/pets/following'
+                    ? 'text-[#8A4FFF] active'
+                    : 'text-[#667085] hover:text-[#8A4FFF]'
+                }`}
+              >
+                <span className="flex items-center">
+                  <svg className="w-5 h-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                  </svg>
+                  Following
                 </span>
               </Link>
               <Link
@@ -97,27 +127,12 @@ export default function Navbar() {
                 }`}
               >
                 <span className="flex items-center">
-                <svg className="w-5 h-5 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
-  <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM4 16l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3zm16 0l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z" />
-</svg>
+                  <svg className="w-5 h-5 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2zM4 16l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3zm16 0l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3z" />
+                  </svg>
                   Generate
                 </span>
               </Link>
-              <Link
-  href="/pets"
-  className={`mr-6 py-2 font-medium text-[15px] ${
-    pathname === '/pets'
-      ? 'text-[#8A4FFF] active'
-      : 'text-[#667085] hover:text-[#8A4FFF]'
-  }`}
->
-  <span className="flex items-center">
-    <svg className="w-5 h-5 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M6 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm6-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM8 14c0 3.314 4 6 4 6s4-2.686 4-6a4 4 0 0 0-8 0z" />
-    </svg>
-    Pets
-  </span>
-</Link>
             </div>
           </div>
           <div className="flex items-center">

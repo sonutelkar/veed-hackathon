@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import PetLoading from '@/components/PetLoading';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { PetProfile } from '@/lib/pet-profile-service';
+import { followPet, unfollowPet, isFollowingPet, getPetFollowerCount } from '@/lib/follow-service';
 
 interface VideoFile {
   id: string;
@@ -27,9 +28,10 @@ export default function PetProfile() {
   const [videos, setVideos] = useState<VideoFile[]>([]);
   const [isVideosLoading, setIsVideosLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [stats, setStats] = useState({
     posts: 0,
-    followers: Math.floor(Math.random() * 1000),
+    followers: 0,
     following: Math.floor(Math.random() * 500)
   });
 
@@ -54,8 +56,18 @@ export default function PetProfile() {
         
         setPet(data as PetProfile);
         
-        // Set random following status for demo
-        setIsFollowing(Math.random() > 0.5);
+        // Get real follower count
+        const followerCount = await getPetFollowerCount(id as string);
+        setStats(prev => ({
+          ...prev,
+          followers: followerCount
+        }));
+        
+        // Check if current user is following this pet
+        if (user) {
+          const following = await isFollowingPet(user.id, id as string);
+          setIsFollowing(following);
+        }
       } catch (err) {
         console.error('Unexpected error fetching pet profile:', err);
       } finally {
@@ -64,7 +76,7 @@ export default function PetProfile() {
     }
     
     fetchPetProfile();
-  }, [id, router]);
+  }, [id, router, user]);
 
   useEffect(() => {
     async function fetchPetVideos() {
@@ -118,13 +130,45 @@ export default function PetProfile() {
     }
   }, [pet]);
 
-  const toggleFollow = () => {
-    setIsFollowing(!isFollowing);
-    // In a real app, you would save this to a database
-    setStats(prev => ({
-      ...prev,
-      followers: prev.followers + (isFollowing ? -1 : 1)
-    }));
+  const toggleFollow = async () => {
+    if (!user || !pet) return;
+    
+    // Prevent self-follow
+    if (user.id === pet.user_id) {
+      return;
+    }
+    
+    setIsFollowLoading(true);
+    
+    try {
+      let success: boolean;
+      
+      if (isFollowing) {
+        // Unfollow
+        success = await unfollowPet(user.id, pet.id);
+        if (success) {
+          setIsFollowing(false);
+          setStats(prev => ({
+            ...prev,
+            followers: Math.max(0, prev.followers - 1)
+          }));
+        }
+      } else {
+        // Follow
+        success = await followPet(user.id, pet.id);
+        if (success) {
+          setIsFollowing(true);
+          setStats(prev => ({
+            ...prev,
+            followers: prev.followers + 1
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('Error toggling follow status:', err);
+    } finally {
+      setIsFollowLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -194,13 +238,14 @@ export default function PetProfile() {
                   {user && user.id !== pet.user_id && (
                     <button
                       onClick={toggleFollow}
+                      disabled={isFollowLoading}
                       className={`paw-button inline-flex items-center rounded-full px-4 py-2 text-sm font-medium shadow-sm ${
                         isFollowing 
                           ? 'bg-white text-black border border-black' 
                           : 'bg-black text-white'
                       }`}
                     >
-                      {isFollowing ? 'Following' : 'Follow'}
+                      {isFollowLoading ? 'Loading...' : isFollowing ? 'Following' : 'Follow'}
                     </button>
                   )}
                   <Link
