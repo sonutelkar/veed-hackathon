@@ -121,7 +121,7 @@ export default function Navbar() {
               <Link
                 href="/duet"
                 className={`mr-6 py-2 font-medium text-[15px] ${
-                  pathname === '/generate'
+                  pathname === '/duet'
                     ? 'text-[#8A4FFF] active'
                     : 'text-[#667085] hover:text-[#8A4FFF]'
                 }`}
