@@ -44,7 +44,7 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold text-pet-purple mb-6">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Step 1 */}
-            <div className="pet-card bg-white p-6 relative">
+            <div className="pet-card p-6 relative">
               <div className="absolute -left-2 -top-2 w-8 h-8 rounded-full bg-pet-purple flex items-center justify-center text-white font-bold">1</div>
               <div className="text-center mb-4">
                 <div className="text-5xl mb-4 mx-auto">📸</div>
@@ -56,7 +56,7 @@ export default function Dashboard() {
             </div>
 
             {/* Step 2 */}
-            <div className="pet-card bg-white p-6 relative">
+            <div className="pet-card p-6 relative">
               <div className="absolute -left-2 -top-2 w-8 h-8 rounded-full bg-pet-purple flex items-center justify-center text-white font-bold">2</div>
               <div className="text-center mb-4">
                 <div className="text-5xl mb-4 mx-auto">✨</div>
@@ -68,7 +68,7 @@ export default function Dashboard() {
             </div>
 
             {/* Step 3 */}
-            <div className="pet-card bg-white p-6 relative">
+            <div className="pet-card p-6 relative">
               <div className="absolute -left-2 -top-2 w-8 h-8 rounded-full bg-pet-purple flex items-center justify-center text-white font-bold">3</div>
               <div className="text-center mb-4">
                 <div className="text-5xl mb-4 mx-auto">🎉</div>
@@ -82,7 +82,7 @@ export default function Dashboard() {
         </div>
 
         {/* Upload section */}
-        <div className="pet-card bg-white mb-8 relative overflow-hidden">
+        <div className="pet-card relative overflow-hidden">
           <div className="absolute -right-4 -top-4 text-4xl rotate-12">🐾</div>
           <div className="px-6 py-8">
             <h3 className="text-xl font-bold text-pet-purple mb-2">Upload your pet photos</h3>
@@ -96,10 +96,10 @@ export default function Dashboard() {
         </div>
 
         {/* Create Adventure Button */}
-        <div className="text-center mb-8">
+        <div className="text-center my-8">
           <Link
             href="/create"
-            className="paw-button inline-flex items-center rounded-full bg-black px-8 py-4 text-base font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+            className="paw-button inline-flex items-center rounded-full bg-pet-purple px-8 py-4 text-base font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
           >
             Create Your First Adventure
             <svg className="ml-2 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

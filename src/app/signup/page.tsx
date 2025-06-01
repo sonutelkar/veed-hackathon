@@ -50,7 +50,7 @@ export default function SignUp() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-6 pet-pattern-bg">
-      <div className="w-full max-w-md space-y-8 pet-card bg-white p-8">
+      <div className="w-full max-w-md space-y-8 pet-card p-8">
         <div className="text-center">
           <PetIcon size={60} className="mx-auto mb-4" />
           <h1 className="text-3xl font-bold pet-gradient-text">Join PetVentures</h1>
@@ -58,7 +58,7 @@ export default function SignUp() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
             {error}
           </div>
         )}
@@ -116,7 +116,7 @@ export default function SignUp() {
             <button
               type="submit"
               disabled={isLoading}
-              className="paw-button flex w-full justify-center rounded-full bg-black bg-pet-purple hover:bg-pet-purple-light px-4 py-3 text-sm font-medium text-white shadow-lg transition-all"
+              className="paw-button flex w-full justify-center rounded-full bg-pet-purple hover:bg-pet-purple-light px-4 py-3 text-sm font-medium text-white shadow-lg transition-all"
             >
               {isLoading ? 'Signing up...' : 'Sign Up'}
             </button>
