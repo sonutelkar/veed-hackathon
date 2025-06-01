@@ -44,7 +44,7 @@ def scout_video_search_audio(clip_length: float) -> str:
         exclude_black_bar = True
         exclude_static = True
         exclude_overlay = True
-        min_quality_score = 0.5
+        min_quality_score = 0.2
         max_quality_score = 1
         min_video_width = 0
         max_video_width = -1
