@@ -156,4 +156,24 @@ export async function deletePetProfile(profileId: string): Promise<boolean> {
   }
   
   return true;
+}
+
+/**
+ * Get all pet profiles except the current user's profile
+ */
+export async function getOtherPetProfiles(currentUserId: string): Promise<PetProfile[]> {
+  const supabase = supabaseBrowser();
+  
+  const { data, error } = await supabase
+    .from('pet_profiles')
+    .select('*')
+    .neq('user_id', currentUserId)
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching other pet profiles:', error);
+    return [];
+  }
+  
+  return data as PetProfile[];
 } 
