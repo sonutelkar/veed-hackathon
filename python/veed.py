@@ -11,7 +11,7 @@ async def generate_avatar_video(audio_url: str) -> dict:
     handler = await fal_client.submit_async(
         "veed/avatars/audio-to-video",
         arguments={
-            "avatar_id": "emily_primary",
+            "avatar_id": "marcus_primary",
             "audio_url": audio_url
         },
     )

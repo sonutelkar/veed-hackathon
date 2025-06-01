@@ -232,7 +232,7 @@ async def avatar_video(request: AvatarRequest):
         lip_sync_result = await generate_avatar_video(request.audio_url)
         result = background_removal.remove_background_from_video_url(lip_sync_result["video"]["url"])
 
-        return result
+        return {"video_url": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
