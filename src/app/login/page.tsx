@@ -109,7 +109,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="paw-button flex w-full justify-center rounded-full bg-pet-purple px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+              className="paw-button flex w-full justify-center rounded-full bg-black px-4 py-3 text-sm font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
             >
               {isLoading ? 'Logging in...' : 'Log In'}
             </button>
