@@ -24,50 +24,7 @@ export async function generateDuet(
   }
 
   try {
-    // First remove backgrounds from both images
-    const removeBackground1Promise = fetch(`${API_URL}/remove-background/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: imageUrl1,
-      }),
-    });
-    
-    const removeBackground2Promise = fetch(`${API_URL}/remove-background/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: imageUrl2,
-      }),
-    });
-    
-    // Wait for both background removal requests to complete
-    const [bg1Response, bg2Response] = await Promise.all([
-      removeBackground1Promise,
-      removeBackground2Promise
-    ]);
-    
-    if (!bg1Response.ok || !bg2Response.ok) {
-      const errorText1 = bg1Response.ok ? "" : await bg1Response.text();
-      const errorText2 = bg2Response.ok ? "" : await bg2Response.text();
-      throw new Error(`Background removal failed: ${errorText1} ${errorText2}`);
-    }
-    
-    const bg1Data = await bg1Response.json();
-    const bg2Data = await bg2Response.json();
-    
-    const bgRemoved1 = bg1Data.background_removed_url;
-    const bgRemoved2 = bg2Data.background_removed_url;
-    
-    if (!bgRemoved1 || !bgRemoved2) {
-      throw new Error('Failed to get background-removed images');
-    }
-    
-    // Now call the kling-duet endpoint with the background-removed images
+    // Now call the kling-duet endpoint directly with the provided images
     const duetResponse = await fetch(`${API_URL}/generate-kling-duet/`, {
       method: 'POST',
       headers: {
@@ -75,8 +32,8 @@ export async function generateDuet(
       },
       body: JSON.stringify({
         prompt,
-        image_url_1: bgRemoved1,
-        image_url_2: bgRemoved2,
+        image_url_1: imageUrl1, // Use the original image URLs
+        image_url_2: imageUrl2,
       }),
     });
     
@@ -90,8 +47,7 @@ export async function generateDuet(
     return {
       status: 'success',
       result,
-      backgroundRemovedUrl1: bgRemoved1,
-      backgroundRemovedUrl2: bgRemoved2
+      // No backgroundRemovedUrl fields needed anymore
     };
     
   } catch (error) {
