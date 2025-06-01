@@ -290,7 +290,7 @@ export async function generateAdventure(
                                   avatarVideo = avatarVideoResult;
                                   
                                   // If we have both audio and avatar video, proceed to final overlay
-                                  if (audioPathResult && avatarVideoResult && avatarVideoResult.video?.url) {
+                                  if (audioPathResult && avatarVideoResult) {
                                     try {
                                       /* Comment out lip sync stage
                                       // Call lip sync endpoint
@@ -313,7 +313,7 @@ export async function generateAdventure(
                                       */
                                       
                                       // If we have both the stitched video and avatar video, call final-overlay directly
-                                      if (stitchData?.url && avatarVideoResult.video?.url) {
+                                      if (stitchData?.url && avatarVideoResult) {
                                           try {
                                             // Call final-overlay endpoint
                                             const finalOverlayResponse = await fetch(`${API_URL}/final-overlay`, {
@@ -323,7 +323,7 @@ export async function generateAdventure(
                                               },
                                               body: JSON.stringify({
                                                 background_url: stitchData.url,
-                                                overlay_url: avatarVideoResult.video.url
+                                                overlay_url: avatarVideoResult
                                               }),
                                             });
                                             
