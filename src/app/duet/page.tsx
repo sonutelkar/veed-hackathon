@@ -261,7 +261,7 @@ export default function Duet() {
                   </div>
                 </div>
               )}
-              s
+              
               {duetResult && duetResult.video_url && (
                 <div className="mb-6">
                   <h3 className="text-lg font-medium mb-3">Duet Preview</h3>
