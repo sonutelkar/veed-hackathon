@@ -289,9 +289,10 @@ export async function generateAdventure(
                                   audioPath = audioPathResult;
                                   avatarVideo = avatarVideoResult;
                                   
-                                  // If we have both audio and avatar video, create lip sync
-                                  if (audioPathResult && avatarVideoResult?.video?.url) {
+                                  // If we have both audio and avatar video, proceed to final overlay
+                                  if (audioPathResult && avatarVideoResult && avatarVideoResult.video?.url) {
                                     try {
+                                      /* Comment out lip sync stage
                                       // Call lip sync endpoint
                                       const lipSyncResponse = await fetch(`${API_URL}/lip-sync-video-audio/`, {
                                         method: 'POST',
@@ -309,6 +310,10 @@ export async function generateAdventure(
                                         
                                         // If we have both the stitched video and lip sync video, call final-overlay
                                         if (stitchData?.url && lipSyncResult?.video_url) {
+                                      */
+                                      
+                                      // If we have both the stitched video and avatar video, call final-overlay directly
+                                      if (stitchData?.url && avatarVideoResult.video?.url) {
                                           try {
                                             // Call final-overlay endpoint
                                             const finalOverlayResponse = await fetch(`${API_URL}/final-overlay`, {
@@ -318,7 +323,7 @@ export async function generateAdventure(
                                               },
                                               body: JSON.stringify({
                                                 background_url: stitchData.url,
-                                                overlay_url: lipSyncResult.video_url
+                                                overlay_url: avatarVideoResult.video.url
                                               }),
                                             });
                                             
@@ -388,18 +393,15 @@ export async function generateAdventure(
                                               script,
                                               audioPath,
                                               avatarVideo,
-                                              lipSyncVideo: lipSyncResult,
+                                              lipSyncVideo: undefined, // Set to undefined since we're skipping lip sync
                                               finalVideo
                                             };
                                           } catch (error) {
-                                            console.error('Error generating final overlay:', error);
+                                            console.error('Error in video processing pipeline:', error);
                                           }
-                                        }
-                                      } else {
-                                        console.error(`Lip sync API error: ${lipSyncResponse.status}`);
                                       }
                                     } catch (error) {
-                                      console.error('Error generating lip sync video:', error);
+                                      console.error('Error generating final overlay:', error);
                                     }
                                   }
                                 } else {
@@ -431,7 +433,7 @@ export async function generateAdventure(
                     script,
                     audioPath,
                     avatarVideo,
-                    lipSyncVideo: lipSyncResult,
+                    lipSyncVideo: undefined, // Set to undefined since we're skipping lip sync
                     finalVideo: undefined
                   };
                 } catch (error) {
