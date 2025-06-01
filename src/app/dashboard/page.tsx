@@ -99,7 +99,7 @@ export default function Dashboard() {
         <div className="text-center my-8">
           <Link
             href="/create"
-            className="paw-button inline-flex items-center rounded-full bg-pet-purple px-8 py-4 text-base font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
+            className="paw-button inline-flex items-center rounded-full bg-black px-8 py-4 text-base font-medium text-white shadow-lg hover:bg-pet-purple-light transition-all"
           >
             Create Your First Adventure
             <svg className="ml-2 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

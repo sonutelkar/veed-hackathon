@@ -34,7 +34,7 @@ export default function PetProfile() {
     followers: 0,
     following: 0
   });
-  const [mediaLikes, setMediaLikes] = useState<Record<string, number>>({});
+  const [selectedMedia, setSelectedMedia] = useState<VideoFile | null>(null);
 
   useEffect(() => {
     async function fetchPetProfile() {
@@ -187,38 +187,12 @@ export default function PetProfile() {
     }
   };
 
-  // Function to get random but stable like count for a media item
-  const getLikeCount = (mediaId: string) => {
-    if (mediaLikes[mediaId] !== undefined) {
-      return mediaLikes[mediaId];
-    }
-    
-    // Create a stable pseudo-random number based on the media ID
-    const hash = mediaId.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
-    
-    // Generate a number between 5 and 150
-    const likeCount = Math.abs(hash % 146) + 5;
-    
-    // Store it for consistency
-    setMediaLikes(prev => ({
-      ...prev,
-      [mediaId]: likeCount
-    }));
-    
-    return likeCount;
+  const openMediaModal = (media: VideoFile) => {
+    setSelectedMedia(media);
   };
 
-  // Function to get random but stable comment count for a media item
-  const getCommentCount = (mediaId: string) => {
-    // Create a different hash than likes
-    const hash = mediaId.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 4) - acc);
-    }, 0);
-    
-    // Generate a number between 0 and 30
-    return Math.abs(hash % 31);
+  const closeMediaModal = () => {
+    setSelectedMedia(null);
   };
 
   if (isLoading) {
@@ -360,7 +334,7 @@ export default function PetProfile() {
                       <video
                         className="h-full w-full object-cover cursor-pointer"
                         preload="metadata"
-                        onClick={() => window.open(media.url, '_blank')}
+                        onClick={() => openMediaModal(media)}
                       >
                         <source src={media.url} type="video/mp4" />
                         Your browser does not support the video tag.
@@ -371,27 +345,9 @@ export default function PetProfile() {
                       src={media.url}
                       alt={media.name}
                       className="h-full w-full object-cover cursor-pointer"
-                      onClick={() => window.open(media.url, '_blank')}
+                      onClick={() => openMediaModal(media)}
                     />
                   )}
-                  
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex items-center space-x-4 text-white">
-                      <div className="flex items-center">
-                        <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                        <span>{getLikeCount(media.id)}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <svg className="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        <span>{getCommentCount(media.id)}</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               ))}
             </div>
@@ -404,6 +360,43 @@ export default function PetProfile() {
           )}
         </div>
       </div>
+      
+      {/* Media Modal */}
+      {selectedMedia && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center p-4">
+          <div className="relative max-w-4xl w-full rounded-lg overflow-hidden">
+            <button 
+              onClick={closeMediaModal}
+              className="absolute top-4 right-4 z-20 bg-black bg-opacity-50 rounded-full p-2 text-white hover:bg-opacity-70 transition-opacity"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {selectedMedia.type === 'video' ? (
+              <video
+                controls
+                autoPlay
+                className="w-full max-h-[80vh] object-contain"
+              >
+                <source src={selectedMedia.url} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <img
+                src={selectedMedia.url}
+                alt={selectedMedia.name}
+                className="w-full max-h-[80vh] object-contain"
+              />
+            )}
+            
+            <div className="bg-white p-4">
+              <p className="text-gray-700 font-medium">{selectedMedia.name}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
