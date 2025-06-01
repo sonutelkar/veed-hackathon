@@ -43,7 +43,7 @@ class ScriptRequest(BaseModel):
     scenes: dict[str, str]
 
 class BackgroundRemovalRequest(BaseModel):
-    url: str
+    image_url: str
 
 class KlingRequest(BaseModel):
     prompt: str

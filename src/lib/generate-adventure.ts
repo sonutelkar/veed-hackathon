@@ -99,7 +99,7 @@ export async function generateAdventure(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: imageUrl,
+          image_url: imageUrl,
         }),
       });
     }
