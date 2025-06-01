@@ -21,6 +21,8 @@ export default function Duet() {
   const [backgroundRemovedUrl1, setBackgroundRemovedUrl1] = useState<string | null>(null);
   const [backgroundRemovedUrl2, setBackgroundRemovedUrl2] = useState<string | null>(null);
   const [duetResult, setDuetResult] = useState<any>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [processingStatus, setProcessingStatus] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -88,13 +90,16 @@ export default function Duet() {
     setBackgroundRemovedUrl1(null);
     setBackgroundRemovedUrl2(null);
     setDuetResult(null);
+    setVideoUrl(null);
+    setProcessingStatus('processing');
     
     try {
-      // Call the API to generate duet
+      // Call the API to generate duet with user ID for storage
       const result = await generateDuet(
         prompt, 
         myPetProfile.profile_image_url, 
-        selectedPet.profile_image_url
+        selectedPet.profile_image_url,
+        user?.id // Pass user ID for storage
       );
       
       if (result.status === 'success') {
@@ -108,12 +113,23 @@ export default function Duet() {
         }
         
         setDuetResult(result.result);
+        
+        // Set the video URL if available
+        if (result.videoUrl) {
+          setVideoUrl(result.videoUrl);
+          setProcessingStatus('completed');
+        } else {
+          setProcessingStatus('processing');
+        }
+        
         setGenerationResult('Duet generated successfully! The duet video will be available in approximately 5-10 minutes.');
       } else {
+        setProcessingStatus('error');
         setGenerationResult(`Error: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error generating duet:', error);
+      setProcessingStatus('error');
       setGenerationResult('Error generating duet. Please try again.');
     } finally {
       setIsGenerating(false);
@@ -131,6 +147,48 @@ export default function Duet() {
   return (
     <div className="min-h-screen bg-[#1A1A1A] text-white">
       <Navbar />
+      
+      {/* Fullscreen Loading Overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center overflow-hidden">
+          <div className="relative w-full max-w-lg">
+            {/* Animated colorful blobs */}
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+            <div className="absolute -bottom-8 right-20 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-3000"></div>
+            
+            {/* Centered content */}
+            <div className="relative flex flex-col items-center justify-center">
+              <div className="flex items-center justify-center mb-8">
+                <div className="h-24 w-24 relative">
+                  {/* Spinning gradient ring */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 animate-spin"></div>
+                  {/* Inner white circle */}
+                  <div className="absolute inset-1 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-4xl">🐾</span>
+                  </div>
+                </div>
+              </div>
+              
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600">
+                Creating Your Pet Duet
+              </h2>
+              
+              <p className="text-center text-gray-600 max-w-md mb-6">
+                Our AI is crafting a unique duet with your pets. This magical process takes a moment...
+              </p>
+              
+              {/* Animated dots */}
+              <div className="flex space-x-2 justify-center items-center">
+                <div className="w-3 h-3 rounded-full bg-purple-600 animate-bounce"></div>
+                <div className="w-3 h-3 rounded-full bg-pink-600 animate-bounce animation-delay-200"></div>
+                <div className="w-3 h-3 rounded-full bg-blue-600 animate-bounce animation-delay-400"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6 pet-gradient-text">Create a Duet</h1>
@@ -262,7 +320,37 @@ export default function Duet() {
                 </div>
               )}
               
-              {duetResult && duetResult.video_url && (
+              {processingStatus === 'processing' && generationResult && (
+                <div className="mb-6 p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
+                  <div className="flex items-center">
+                    <span className="text-xl mr-2">⏳</span>
+                    <h4 className="text-md font-semibold text-yellow-300">Video Generation In Progress</h4>
+                  </div>
+                  <p className="text-sm text-yellow-200 mt-1">
+                    Your pet duet video is being generated with AI. This process takes approximately 5-10 minutes. 
+                    Please check back later in the Videos section to view your completed video.
+                  </p>
+                </div>
+              )}
+              
+              {videoUrl && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium mb-3">Duet Preview</h3>
+                  <video 
+                    className="w-full rounded-lg border border-gray-600"
+                    controls
+                    poster={duetResult?.thumbnail_url || ''}
+                  >
+                    <source src={videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  <p className="mt-2 text-sm text-gray-400">
+                    Your duet has been saved to your videos. You can find it in the Videos section!
+                  </p>
+                </div>
+              )}
+              
+              {duetResult && duetResult.video_url && !videoUrl && (
                 <div className="mb-6">
                   <h3 className="text-lg font-medium mb-3">Duet Preview</h3>
                   <video 
