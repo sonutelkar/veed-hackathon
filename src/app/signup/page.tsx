@@ -116,7 +116,7 @@ export default function SignUp() {
             <button
               type="submit"
               disabled={isLoading}
-              className="paw-button flex w-full justify-center rounded-full bg-pet-purple hover:bg-pet-purple-light px-4 py-3 text-sm font-medium text-white shadow-lg transition-all"
+              className="paw-button flex w-full justify-center rounded-full bg-black hover:bg-pet-purple-light px-4 py-3 text-sm font-medium text-white shadow-lg transition-all"
             >
               {isLoading ? 'Signing up...' : 'Sign Up'}
             </button>
