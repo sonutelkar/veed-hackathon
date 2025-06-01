@@ -175,8 +175,8 @@ def overlay_videos_and_upload(background_url: str, overlay_url: str) -> str:
 
 # Example usage
 if __name__ == "__main__":
-    background_test_url = "https://vqgovjnvkxtkhuixookb.supabase.co/storage/v1/object/public/videos//SEV6-vPmc_ih9eXBArkhm_output.mp4"
-    overlay_test_url = "https://vqgovjnvkxtkhuixookb.supabase.co/storage/v1/object/public/videos//tmptrxb7mw4.mp4-7d708a08-11eb-4452-9046-c3d2403ad904.mp4"
+    background_test_url = "https://v3.fal.media/files/lion/o8EDl0zCLMDjYSxoR4vas_output.mp4"
+    overlay_test_url = "https://vqgovjnvkxtkhuixookb.supabase.co/storage/v1/object/public/videos/tmp1590dck0.webm-f7729d9a-d669-41dd-b0ee-d38ef1b26adb.webm"
 
     try:
         result_url = overlay_videos_and_upload(background_test_url, overlay_test_url)
