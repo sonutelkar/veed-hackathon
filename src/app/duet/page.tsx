@@ -145,7 +145,7 @@ export default function Duet() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A] text-white">
+    <div className="min-h-screen pet-pattern-bg">
       <Navbar />
       
       {/* Fullscreen Loading Overlay */}
@@ -194,7 +194,7 @@ export default function Duet() {
         <h1 className="text-3xl font-bold mb-6 pet-gradient-text">Create a Duet</h1>
         
         {!myPetProfile || !myPetProfile.profile_image_url ? (
-          <div className="bg-[#2A2A2A] p-6 rounded-lg shadow mb-8">
+          <div className="pet-card p-6 rounded-lg shadow mb-8">
             <h2 className="text-xl font-semibold mb-4">Complete Your Pet Profile First</h2>
             <p className="mb-4">Your pet needs a profile image to create duets.</p>
             <button
@@ -206,15 +206,15 @@ export default function Duet() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-[#2A2A2A] p-6 rounded-lg shadow">
+            <div className="pet-card p-6 rounded-lg shadow">
               <h2 className="text-xl font-semibold mb-4">1. Create Your Duet</h2>
               
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium mb-2">
                   Enter a prompt for your duet:
                 </label>
                 <textarea
-                  className="w-full p-3 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-800 dark:border-gray-600"
                   rows={4}
                   placeholder="Describe what you want your pets to do together. E.g., 'Two cute dogs playing in a park with a ball'"
                   value={prompt}
@@ -237,7 +237,7 @@ export default function Duet() {
                     </div>
                     <div>
                       <p className="font-semibold">{myPetProfile.name}</p>
-                      {myPetProfile.breed && <p className="text-sm text-gray-400">{myPetProfile.breed}</p>}
+                      {myPetProfile.breed && <p className="text-pet-gray">{myPetProfile.breed}</p>}
                     </div>
                   </div>
                 )}
@@ -252,7 +252,7 @@ export default function Duet() {
                         key={pet.id}
                         onClick={() => handleSelectPet(pet)}
                         className={`p-2 rounded-lg cursor-pointer transition ${
-                          selectedPet?.id === pet.id ? 'bg-purple-600 border-2 border-purple-400' : 'bg-gray-800 hover:bg-gray-700'
+                          selectedPet?.id === pet.id ? 'bg-purple-600 border-2 border-purple-400' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700'
                         }`}
                       >
                         {pet.profile_image_url && (
@@ -283,85 +283,91 @@ export default function Duet() {
               </button>
             </div>
             
-            <div className="bg-[#2A2A2A] p-6 rounded-lg shadow">
+            <div className="pet-card p-6 rounded-lg shadow">
               <h2 className="text-xl font-semibold mb-4">2. Results</h2>
               
               {generationResult && (
-                <div className="mb-6 p-3 bg-gray-800 rounded">
+                <div className="mb-6 p-3 bg-gray-100 dark:bg-gray-800 rounded">
                   <p>{generationResult}</p>
                 </div>
               )}
               
-              {(backgroundRemovedUrl1 || backgroundRemovedUrl2) && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-3">Background Removed Images</h3>
-                  <div className="flex flex-wrap gap-4">
-                    {backgroundRemovedUrl1 && (
-                      <div className="relative w-40 h-40 rounded-lg overflow-hidden border border-gray-600">
-                        <Image
-                          src={backgroundRemovedUrl1}
-                          alt="Your pet with background removed"
-                          fill
-                          style={{ objectFit: 'contain' }}
-                        />
+              {duetResult ? (
+                <>
+                  {(backgroundRemovedUrl1 || backgroundRemovedUrl2) && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-3">Background Removed Images</h3>
+                      <div className="flex flex-wrap gap-4">
+                        {backgroundRemovedUrl1 && (
+                          <div className="relative w-40 h-40 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                            <Image
+                              src={backgroundRemovedUrl1}
+                              alt="Your pet with background removed"
+                              fill
+                              style={{ objectFit: 'contain' }}
+                            />
+                          </div>
+                        )}
+                        {backgroundRemovedUrl2 && (
+                          <div className="relative w-40 h-40 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                            <Image
+                              src={backgroundRemovedUrl2}
+                              alt="Selected pet with background removed"
+                              fill
+                              style={{ objectFit: 'contain' }}
+                            />
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {backgroundRemovedUrl2 && (
-                      <div className="relative w-40 h-40 rounded-lg overflow-hidden border border-gray-600">
-                        <Image
-                          src={backgroundRemovedUrl2}
-                          alt="Selected pet with background removed"
-                          fill
-                          style={{ objectFit: 'contain' }}
-                        />
+                    </div>
+                  )}
+                  
+                  {processingStatus === 'processing' && generationResult && (
+                    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-700/50 rounded-lg">
+                      <div className="flex items-center">
+                        <span className="text-xl mr-2">⏳</span>
+                        <h4 className="text-md font-semibold text-yellow-700 dark:text-yellow-300">Video Generation In Progress</h4>
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {processingStatus === 'processing' && generationResult && (
-                <div className="mb-6 p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-                  <div className="flex items-center">
-                    <span className="text-xl mr-2">⏳</span>
-                    <h4 className="text-md font-semibold text-yellow-300">Video Generation In Progress</h4>
-                  </div>
-                  <p className="text-sm text-yellow-200 mt-1">
-                    Your pet duet video is being generated with AI. This process takes approximately 5-10 minutes. 
-                    Please check back later in the Videos section to view your completed video.
-                  </p>
-                </div>
-              )}
-              
-              {videoUrl && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-3">Duet Preview</h3>
-                  <video 
-                    className="w-full rounded-lg border border-gray-600"
-                    controls
-                    poster={duetResult?.thumbnail_url || ''}
-                  >
-                    <source src={videoUrl} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                  <p className="mt-2 text-sm text-gray-400">
-                    Your duet has been saved to your videos. You can find it in the Videos section!
-                  </p>
-                </div>
-              )}
-              
-              {duetResult && duetResult.video_url && !videoUrl && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium mb-3">Duet Preview</h3>
-                  <video 
-                    className="w-full rounded-lg border border-gray-600"
-                    controls
-                    poster={duetResult.thumbnail_url || ''}
-                  >
-                    <source src={duetResult.video_url} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
+                      <p className="text-sm text-yellow-600 dark:text-yellow-200 mt-1">
+                        Your pet duet video is being generated with AI. This process takes approximately 5-10 minutes. 
+                        Please check back later in the Videos section to view your completed video.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {videoUrl && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-3">Duet Preview</h3>
+                      <video 
+                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600"
+                        controls
+                        poster={duetResult?.thumbnail_url || ''}
+                      >
+                        <source src={videoUrl} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Your duet has been saved to your videos. You can find it in the Videos section!
+                      </p>
+                    </div>
+                  )}
+                  
+                  {duetResult && duetResult.video_url && !videoUrl && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium mb-3">Duet Preview</h3>
+                      <video 
+                        className="w-full rounded-lg border border-gray-300 dark:border-gray-600"
+                        controls
+                        poster={duetResult.thumbnail_url || ''}
+                      >
+                        <source src={duetResult.video_url} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-center text-gray-500">Your duet is not generated yet. Please click "Generate Duet" to create one!</p>
               )}
             </div>
           </div>
