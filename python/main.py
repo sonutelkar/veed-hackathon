@@ -67,6 +67,10 @@ class KlingDuetRequest(BaseModel):
     image_url_1: str
     image_url_2: str
 
+class VideoOverlayRequest(BaseModel):
+    background_url: str
+    overlay_url: str
+
 
 @app.get("/")
 async def read_root():
