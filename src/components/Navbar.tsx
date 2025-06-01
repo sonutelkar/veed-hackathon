@@ -118,6 +118,22 @@ export default function Navbar() {
                   Generate
                 </span>
               </Link>
+              <Link
+                href="/duet"
+                className={`mr-6 py-2 font-medium text-[15px] ${
+                  pathname === '/generate'
+                    ? 'text-[#8A4FFF] active'
+                    : 'text-[#667085] hover:text-[#8A4FFF]'
+                }`}
+              >
+                <span className="flex items-center">
+                <svg className="w-5 h-5 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+  <path d="M7 7a2 2 0 114 0 2 2 0 01-4 0zM13 7a2 2 0 114 0 2 2 0 01-4 0z" />
+  <path d="M5 15c0-1.66 2.69-3 6-3s6 1.34 6 3v1H5v-1zM15 13c2.21 0 4 1.12 4 2.5V17h-2v-1.5c0-.55-.9-1.5-2-1.5h-.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5H15z" />
+</svg>
+                  Duet
+                </span>
+              </Link>
             </div>
           </div>
           <div className="flex items-center">
