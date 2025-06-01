@@ -224,7 +224,7 @@ export default function Generate() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold pet-gradient-text">Generate Pet Content</h1>
+            <h1 className="text-3xl font-bold pet-gradient-text">Generate your custom pet movie</h1>
             <p className="mt-1 text-pet-gray">
               Enter a prompt and select an image to create something special
             </p>
