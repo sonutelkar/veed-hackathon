@@ -112,7 +112,7 @@ def overlay_videos_and_upload(background_url: str, overlay_url: str) -> str:
     background_path = download_video(background_url, background_filename)
     overlay_path = download_video(overlay_url, overlay_filename)
 
-    with VideoFileClip(background_path) as background, VideoFileClip(overlay_path) as overlay_clip:
+    with VideoFileClip(background_path) as background, VideoFileClip(overlay_path, has_mask=True) as overlay_clip:
         bg_width, bg_height = background.size
         ov_width, ov_height = overlay_clip.size
 
