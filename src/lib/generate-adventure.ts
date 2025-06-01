@@ -284,6 +284,7 @@ export async function generateAdventure(
                                 let avatarVideoResult: any = undefined;
                                 if (avatarResponse.ok) {
                                   avatarVideoResult = await avatarResponse.json();
+                                  console.log("Avatar video API response:", avatarVideoResult);
                                   
                                   // Update variables with the results
                                   audioPath = audioPathResult;
@@ -311,18 +312,30 @@ export async function generateAdventure(
                                         // If we have both the stitched video and lip sync video, call final-overlay
                                         if (stitchData?.url && lipSyncResult?.video_url) {
                                       */
+
+                                      console.log("stitchData", stitchData);
+                                      console.log("avatarVideoResult", avatarVideoResult);
+                                      
+                                      // Add detailed logging for condition checking
+                                      console.log("Final overlay condition check:");
+                                      console.log("- stitchData exists:", !!stitchData);
+                                      console.log("- stitchData.video_url exists:", !!stitchData?.video_url);
+                                      console.log("- avatarVideoResult exists:", !!avatarVideoResult);
+                                      console.log("- avatarVideoResult.video_url exists:", !!avatarVideoResult?.video_url);
+                                      console.log("- Condition result:", !!(stitchData?.video_url && avatarVideoResult?.video_url));
                                       
                                       // If we have both the stitched video and avatar video, call final-overlay directly
-                                      if (stitchData?.url && avatarVideoResult) {
+                                      if (stitchData?.video_url && avatarVideoResult?.video_url) {
+                                          console.log("Final overlay condition met - calling API");
                                           try {
                                             // Call final-overlay endpoint
-                                            const finalOverlayResponse = await fetch(`${API_URL}/final-overlay`, {
+                                            const finalOverlayResponse = await fetch(`${API_URL}/final-overlay/`, {
                                               method: 'POST',
                                               headers: {
                                                 'Content-Type': 'application/json',
                                               },
                                               body: JSON.stringify({
-                                                background_url: stitchData.url,
+                                                background_url: stitchData.video_url,
                                                 overlay_url: avatarVideoResult.video_url
                                               }),
                                             });
