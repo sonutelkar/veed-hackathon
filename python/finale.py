@@ -38,7 +38,7 @@ def scout_video_search_audio(clip_length: float) -> str:
         num_results = 1
         format_results = "raw_video_480p"
         return_metadata = []
-        min_relevance_score = 0.3
+        min_relevance_score = 0.7
         aspect_ratio = []
         only_creative_commons = False
         exclude_black_bar = True
