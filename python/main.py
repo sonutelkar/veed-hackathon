@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from tts import tts_from_script
 from veed import generate_avatar_video, lip_sync_video_audio
 from fal_kling_duet import generate_kling_duet
+from finale import overlay_videos_and_upload
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -266,5 +267,13 @@ async def remove_background(request: BackgroundRemovalRequest):
     try:
         result_url = background_removal.remove_background_from_video_url(request.url)
         return {"background_removed_url": result_url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/final-overlay")
+async def overlay_video_endpoint(req: VideoOverlayRequest):
+    try:
+        video_url = overlay_videos_and_upload(req.background_url, req.overlay_url)
+        return {"status": "success", "video_url": video_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
