@@ -13,6 +13,7 @@ interface GenerateResponse {
   audioPath?: string;
   avatarVideo?: any;
   lipSyncVideo?: any;
+  finalVideo?: any;
   // Add other response fields as needed
 }
 
@@ -60,9 +61,16 @@ interface LipSyncResponse {
   [key: string]: any;
 }
 
+interface VideoOverlayResponse {
+  status: string;
+  video_url: string;
+  stored_url?: string;
+}
+
 export async function generateAdventure(
   prompt: string,
-  imageUrl?: string
+  imageUrl?: string,
+  userId?: string
 ): Promise<GenerateResponse> {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
   
@@ -298,6 +306,95 @@ export async function generateAdventure(
                                       
                                       if (lipSyncResponse.ok) {
                                         lipSyncResult = await lipSyncResponse.json();
+                                        
+                                        // If we have both the stitched video and lip sync video, call final-overlay
+                                        if (stitchData?.url && lipSyncResult?.video_url) {
+                                          try {
+                                            // Call final-overlay endpoint
+                                            const finalOverlayResponse = await fetch(`${API_URL}/final-overlay`, {
+                                              method: 'POST',
+                                              headers: {
+                                                'Content-Type': 'application/json',
+                                              },
+                                              body: JSON.stringify({
+                                                background_url: stitchData.url,
+                                                overlay_url: lipSyncResult.video_url
+                                              }),
+                                            });
+                                            
+                                            let finalVideo = undefined;
+                                            if (finalOverlayResponse.ok) {
+                                              const finalOverlayData: VideoOverlayResponse = await finalOverlayResponse.json();
+                                              finalVideo = finalOverlayData;
+                                              
+                                              // If userId is provided, store the video in Supabase
+                                              if (userId && finalOverlayData.video_url) {
+                                                try {
+                                                  // Import supabase browser client dynamically
+                                                  const { supabaseBrowser } = await import('./supabase-browser');
+                                                  const supabase = supabaseBrowser();
+                                                  
+                                                  // Download the video
+                                                  const videoResponse = await fetch(finalOverlayData.video_url);
+                                                  
+                                                  if (!videoResponse.ok) {
+                                                    throw new Error(`Failed to download final video: ${videoResponse.status}`);
+                                                  }
+                                                  
+                                                  const videoBlob = await videoResponse.blob();
+                                                  
+                                                  // Generate a unique filename
+                                                  const timestamp = new Date().getTime();
+                                                  const filename = `adventure_${timestamp}.mp4`;
+                                                  const filePath = `${userId}/${filename}`;
+                                                  
+                                                  // Upload to Supabase storage
+                                                  const { data, error } = await supabase.storage
+                                                    .from('videos')
+                                                    .upload(filePath, videoBlob, {
+                                                      contentType: 'video/mp4',
+                                                      cacheControl: '3600',
+                                                    });
+                                                    
+                                                  if (error) {
+                                                    console.error('Error uploading final video to Supabase:', error);
+                                                  } else {
+                                                    // Get the public URL
+                                                    const { data: { publicUrl } } = supabase.storage
+                                                      .from('videos')
+                                                      .getPublicUrl(filePath);
+                                                      
+                                                    // Update finalVideo with the stored URL
+                                                    finalVideo = {
+                                                      ...finalOverlayData,
+                                                      stored_url: publicUrl
+                                                    };
+                                                  }
+                                                } catch (uploadError) {
+                                                  console.error('Error storing final video in Supabase:', uploadError);
+                                                }
+                                              }
+                                            } else {
+                                              console.error(`Final overlay API error: ${finalOverlayResponse.status}`);
+                                            }
+                                            
+                                            // Return complete response with final video
+                                            return {
+                                              scenes: scenesData.scenes,
+                                              backgroundRemovedUrl,
+                                              videoResults,
+                                              stitchedVideo: stitchData,
+                                              videoSummaries,
+                                              script,
+                                              audioPath,
+                                              avatarVideo,
+                                              lipSyncVideo: lipSyncResult,
+                                              finalVideo
+                                            };
+                                          } catch (error) {
+                                            console.error('Error generating final overlay:', error);
+                                          }
+                                        }
                                       } else {
                                         console.error(`Lip sync API error: ${lipSyncResponse.status}`);
                                       }
@@ -334,7 +431,8 @@ export async function generateAdventure(
                     script,
                     audioPath,
                     avatarVideo,
-                    lipSyncVideo: lipSyncResult
+                    lipSyncVideo: lipSyncResult,
+                    finalVideo: undefined
                   };
                 } catch (error) {
                   console.error('Error processing videos:', error);
@@ -360,7 +458,8 @@ export async function generateAdventure(
       script: undefined,
       audioPath: undefined,
       avatarVideo: undefined,
-      lipSyncVideo: undefined
+      lipSyncVideo: undefined,
+      finalVideo: undefined
     };
   } catch (error) {
     console.error('Error generating adventure:', error);
