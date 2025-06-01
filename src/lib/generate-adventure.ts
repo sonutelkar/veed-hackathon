@@ -323,7 +323,7 @@ export async function generateAdventure(
                                               },
                                               body: JSON.stringify({
                                                 background_url: stitchData.url,
-                                                overlay_url: avatarVideoResult
+                                                overlay_url: avatarVideoResult.video_url
                                               }),
                                             });
                                             
