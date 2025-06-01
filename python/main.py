@@ -219,20 +219,22 @@ async def generate_tts_from_script(request: TTSRequest):
 @app.post("/generate-avatar-video/")
 async def avatar_video(request: AvatarRequest):
     try:
-        result = await generate_avatar_video(request.audio_url)
+        lip_sync_result = await generate_avatar_video(request.audio_url)
+        result = background_removal.remove_background_from_video_url(lip_sync_result["video"]["url"])
+
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/lip-sync-video-audio/")
-async def lip_sync(request: VideoAudioRequest):
-    try:
-        result = await lip_sync_video_audio(request.video_url, request.audio_url)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
+# @app.post("/lip-sync-video-audio/")
+# async def lip_sync(request: VideoAudioRequest):
+#     try:
+#         result = await lip_sync_video_audio(request.video_url, request.audio_url)
+#         return result
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+#     
 
 @app.post("/stitch-scenes/")
 async def stitch_scenes(request: SceneStitchRequest):
