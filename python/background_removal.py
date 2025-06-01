@@ -11,6 +11,35 @@ from supabase_utils import upload_to_supabase
 load_dotenv()
 
 
+def convert_mov_to_webm(input_path: str) -> str:
+    output_path = input_path.replace(".mov", ".webm")
+    print(f"[DEBUG] Starting conversion from MOV to WEBM (with transparency)")
+    print(f"[DEBUG] Input path: {input_path}")
+    print(f"[DEBUG] Output path: {output_path}")
+
+    try:
+        result = subprocess.run([
+            "ffmpeg", "-y",  # Overwrite output if it exists
+            "-i", input_path,
+            "-c:v", "libvpx-vp9",          # Use VP9 codec
+            "-pix_fmt", "yuva420p",        # Pixel format with alpha support
+            "-auto-alt-ref", "0",          # Disable alternate reference frames (needed for transparency)
+            output_path
+        ], check=True, capture_output=True, text=True)
+
+        print(f"[DEBUG] ffmpeg stdout:\n{result.stdout}")
+        print(f"[DEBUG] ffmpeg stderr:\n{result.stderr}")
+        print(f"[DEBUG] Conversion successful. Output saved at: {output_path}")
+
+    except subprocess.CalledProcessError as e:
+        print(f"[ERROR] ffmpeg conversion failed with return code {e.returncode}")
+        print(f"[ERROR] ffmpeg stdout:\n{e.stdout}")
+        print(f"[ERROR] ffmpeg stderr:\n{e.stderr}")
+        raise
+
+    return output_path
+
+
 def convert_mov_to_mp4(input_path: str) -> str:
     output_path = input_path.replace(".mov", ".mp4")
     print(f"[DEBUG] Starting conversion from MOV to MP4")
@@ -131,10 +160,10 @@ def remove_background_from_video_url(video_url: str) -> str:
             # Convert if it's .mov
             if processed_video_path.lower().endswith(".mov"):
                 print(f"Video is .mov file format")
-                processed_video_path = convert_mov_to_mp4(processed_video_path)
+                processed_video_path = convert_mov_to_webm(processed_video_path)
 
             print(f"Ready to upload...")
-            public_url = upload_to_supabase(processed_video_path, content_type="video/mp4")
+            public_url = upload_to_supabase(processed_video_path, content_type="video/webm")
             print(f"Uploaded processed video to Supabase: {public_url}")
             return public_url
         
@@ -153,8 +182,7 @@ if __name__ == "__main__":
     video_url = "https://v3.fal.media/files/monkey/ZF4I_LbXueILl05SjAKV2_tmpkk6ff5v3.mp4"
 
     try:
-        # result_url = remove_background_from_video_url(video_url)
-        # print("Final Public URL:", result_url)
-        convert_mov_to_mp4(input_path="test.mov")
+        result_url = remove_background_from_video_url(video_url)
+        print("Final Public URL:", result_url)
     except Exception as e:
         print("Error:", e)
