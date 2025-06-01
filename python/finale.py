@@ -75,7 +75,7 @@ def overlay_videos_and_upload(background_url: str, overlay_url: str) -> str:
 
         print("Background audio:", "Yes" if background.audio else "No")
         print("Overlay audio:", "Yes" if overlay_clip.audio else "No")
-        
+
         audio_tracks = []
         if background.audio:
             audio_tracks.append(background.audio)
@@ -83,6 +83,7 @@ def overlay_videos_and_upload(background_url: str, overlay_url: str) -> str:
             audio_tracks.append(overlay.audio)
 
         if audio_tracks:
+            print(audio_tracks)
             final = final.with_audio(CompositeAudioClip(audio_tracks))
 
         final.write_videofile(output_path, codec="libx264", audio_codec="aac")
